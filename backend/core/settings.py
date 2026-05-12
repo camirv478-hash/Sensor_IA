@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -48,7 +50,7 @@ INSTALLED_APPS = [
     'apps.recycling',
     'apps.gamification',
     'apps.marketplace',
-    # 'apps.chatbot',
+    'apps.chatbot',
 ]
 
 MIDDLEWARE = [
@@ -164,3 +166,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Modelo de usuario personalizado (se activará cuando creemos la app users)
 AUTH_USER_MODEL = 'users.User'
+
+#scan
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

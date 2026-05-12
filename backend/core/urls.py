@@ -40,4 +40,7 @@ urlpatterns = [
 
     #App de marketplace
     path('api/marketplace/', include('apps.marketplace.urls')),
+
+    #App de chatbot
+    path('api/chatbot/', include('apps.chatbot.urls')),
 ]

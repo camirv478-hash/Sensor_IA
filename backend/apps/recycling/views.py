@@ -2,6 +2,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Residuo, Escaneo
+
+from .classifier import classifier
+import os
+
 from .serializers import (
     ResiduoSerializer,
     EscaneoSerializer,
@@ -18,24 +22,69 @@ class ResiduoListView(generics.ListAPIView):
 
 
 class EscaneoCreateView(generics.CreateAPIView):
-    """Registrar un nuevo escaneo (online u offline)."""
+    """Registrar un nuevo escaneo con clasificación IA."""
     serializer_class = EscaneoCreateSerializer
     permission_classes = (permissions.IsAuthenticated,)
     parser_classes = (MultiPartParser, FormParser)
     
     def perform_create(self, serializer):
-        residuo_id = self.request.data.get('residuo')
-        try:
-            residuo = Residuo.objects.get(id=residuo_id)
-        except Residuo.DoesNotExist:
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError({"residuo": "Residuo no encontrado"})
+        # Obtener imagen si se envió
+        imagen = self.request.FILES.get('imagen')
         
-        serializer.save(
-            usuario=self.request.user,
-            residuo=residuo,
-            puntos_obtenidos=residuo.puntos_base
-        )
+        if imagen:
+            # Guardar imagen temporalmente
+            from django.core.files.storage import default_storage
+            temp_path = default_storage.save(f'temp/{imagen.name}', imagen)
+            temp_full_path = os.path.join(settings.MEDIA_ROOT, temp_path)
+            
+            try:
+                # Clasificar con IA
+                resultado_ia = classifier.clasificar(temp_full_path)
+                
+                # Buscar residuo en catálogo
+                from .models import Residuo
+                residuo = Residuo.objects.filter(
+                    categoria=resultado_ia['categoria'],
+                    activo=True
+                ).first()
+                
+                if not residuo:
+                    # Crear residuo si no existe
+                    residuo = Residuo.objects.create(
+                        nombre=resultado_ia['categoria_display'],
+                        categoria=resultado_ia['categoria'],
+                        puntos_base=resultado_ia['puntos_base'],
+                    )
+                
+                serializer.save(
+                    usuario=self.request.user,
+                    residuo=residuo,
+                    imagen=imagen,
+                    confianza_ia=resultado_ia['confianza'],
+                    puntos_obtenidos=residuo.puntos_base,
+                )
+                
+            finally:
+                # Limpiar archivo temporal
+                if os.path.exists(temp_full_path):
+                    os.remove(temp_full_path)
+        else:
+            # Sin imagen, usar el residuo enviado manualmente
+            residuo_id = self.request.data.get('residuo')
+            if residuo_id:
+                from .models import Residuo
+                try:
+                    residuo = Residuo.objects.get(id=residuo_id)
+                except Residuo.DoesNotExist:
+                    residuo = None
+                
+                serializer.save(
+                    usuario=self.request.user,
+                    residuo=residuo,
+                    puntos_obtenidos=residuo.puntos_base if residuo else 0,
+                )
+            else:
+                serializer.save(usuario=self.request.user)
 
 class EscaneoHistoryView(generics.ListAPIView):
     """Historial de escaneos del usuario autenticado."""
