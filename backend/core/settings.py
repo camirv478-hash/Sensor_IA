@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     
     # Apps propias (se crearán después)
-    # 'apps.users',
+    'apps.users',
     # 'apps.recycling',
     # 'apps.gamification',
     # 'apps.marketplace',
@@ -87,8 +87,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sensoria_db',
+        'USER': 'postgres',
+        'PASSWORD': '12345',  # La contraseña que elegiste
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -159,4 +163,4 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Modelo de usuario personalizado (se activará cuando creemos la app users)
-# AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'users.User'
