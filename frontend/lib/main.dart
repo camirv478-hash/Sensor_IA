@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'services/tflite_service.dart';  // ← Agregar
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -13,7 +14,12 @@ import 'screens/leaderboard_screen.dart';
 import 'screens/chatbot_screen.dart';
 import 'screens/history_screen.dart';
 
-void main() {
+void main() async {  // ← Agregar async
+  WidgetsFlutterBinding.ensureInitialized();  // ← Agregar
+  
+  // Cargar modelo TFLite offline  ← Agregar
+  await TFLiteService().loadModel();  // ← Agregar
+  
   runApp(
     MultiProvider(
       providers: [
@@ -24,6 +30,7 @@ void main() {
   );
 }
 
+// El resto queda igual
 class SensorIAApp extends StatelessWidget {
   const SensorIAApp({super.key});
 
