@@ -9,152 +9,76 @@ import '../widgets/impact_section.dart';
 import '../widgets/recent_activity.dart';
 import '../widgets/bottom_nav_bar.dart';
 
-import 'rewards_screen.dart';
-import 'scan_screen.dart';
-import 'chatbot_screen.dart';
-import 'profile_screen.dart';
-
-
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() =>
-      _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState
-    extends State<HomeScreen> {
-
+class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+
+  void _onNavTap(int index) {
+    setState(() => _currentIndex = index);
+
+    switch (index) {
+      case 0:
+        break; // Ya en home
+      case 1:
+        Navigator.pushNamed(context, '/history');
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/rewards');
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/profile');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF0A1A0F),
-
+      backgroundColor: const Color(0xFF0A1A0F),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics:
-              const BouncingScrollPhysics(),
-
+          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 16,
-            ),
-
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 const SizedBox(height: 16),
-
-                /// HEADER
                 const HeaderSection(),
-
                 const SizedBox(height: 20),
-
-                /// POINTS CARD
                 const PointsCard(),
-
                 const SizedBox(height: 24),
-
-                /// TITLE
-                Text(
-                  '¿Qué deseas hacer hoy?',
-                  style:
-                      GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight:
-                        FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-
+                Text('¿Qué deseas hacer hoy?',
+                    style: GoogleFonts.poppins(
+                        fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(height: 16),
-
-                /// QUICK ACTIONS
                 QuickActions(
-                  onScanTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ScanScreen(),
-                      ),
-                    );
-                  },
-
-                  onResultTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ChatBotScreen(),
-                      ),
-                    );
-                  },
+                  onScanTap: () => Navigator.pushNamed(context, '/scan'),
+                  onChatbotTap: () => Navigator.pushNamed(context, '/chatbot'),
+                  onHistoryTap: () => Navigator.pushNamed(context, '/history'),
+                  onChallengesTap: () => Navigator.pushNamed(context, '/challenges'),
                 ),
-
                 const SizedBox(height: 20),
-
-                /// PROMO CARD
                 const PromoCard(),
-
                 const SizedBox(height: 24),
-
-                /// IMPACT
                 const ImpactSection(),
-
                 const SizedBox(height: 24),
-
-                /// RECENT ACTIVITY
                 const RecentActivity(),
-
                 const SizedBox(height: 120),
               ],
             ),
           ),
         ),
       ),
-
-      /// BOTTOM NAV
-      bottomNavigationBar:
-          BottomNavBar(
-
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
-
-        onTap: (index) {
-
-          setState(() {
-            _currentIndex = index;
-          });
-
-          /// REWARDS
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    const RewardsScreen(),
-              ),
-            );
-          }
-
-          if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    const ProfileScreen(),
-              ),
-            );
-          }
-        },
+        onTap: _onNavTap,
       ),
     );
   }

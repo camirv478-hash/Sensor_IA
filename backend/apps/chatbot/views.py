@@ -1,3 +1,7 @@
+import os
+import random
+from google import genai
+from dotenv import load_dotenv
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,7 +10,19 @@ from .serializers import (
     ConversacionSerializer, ConversacionCreateSerializer,
     MensajeSerializer, MensajeCreateSerializer, TipReciclajeSerializer
 )
-import random
+
+# Cargar variables de entorno
+load_dotenv()
+
+# Configurar Gemini
+GEMINI_API_KEY = "AIzaSyAwicxrECx_zmnRvyqJjWu-AmZDfZi74FY"
+if GEMINI_API_KEY:
+    client = genai.Client(api_key="AIzaSyAwicxrECx_zmnRvyqJjWu-AmZDfZi74FY")
+    gemini_model = client
+    print("✅ Gemini API configurado correctamente")
+else:
+    gemini_model = None
+    print("⚠️ Gemini API Key no encontrada. Usando respuestas simuladas.")
 
 
 class ConversacionListView(generics.ListAPIView):
@@ -76,45 +92,44 @@ class MensajeCreateView(APIView):
         })
     
     def _generar_respuesta(self, mensaje, usuario):
-        """Simulación simple del chatbot con respuestas ecológicas."""
+        """Respuesta con Gemini AI o fallback simulado."""
+        
+        # Intentar con Gemini
+        if gemini_model:
+            try:
+                prompt = f"""Eres EcoBot, un asistente experto en reciclaje y medio ambiente de la app SensorIA.
+                
+Usuario: {usuario.first_name or 'EcoGuardián'}
+Nivel: {usuario.nivel}
+Puntos: {usuario.puntos}
+
+Pregunta: {mensaje}
+
+Responde de forma amigable, corta (máximo 3 oraciones) y útil. Usa emojis ecológicos.
+Si te preguntan por puntos o nivel del usuario, usa los datos proporcionados arriba.
+Responde en español."""
+
+                response = gemini_model.models.generate_content(
+                    model='gemini-2.0-flash-lite',
+                    contents=prompt
+                )
+                return response.text.strip()
+            except Exception as e:
+                print(f"Error con Gemini: {e}")
+        
+        # Fallback simulado
         mensaje_lower = mensaje.lower()
         
-        # Respuestas predefinidas
         if any(p in mensaje_lower for p in ['hola', 'buenas', 'hey', 'saludos']):
-            return random.choice([
-                f"¡Hola {usuario.first_name or 'EcoGuardián'}! 🌱 ¿En qué puedo ayudarte con el reciclaje hoy?",
-                f"¡Saludos {usuario.first_name or 'reciclador'}! 🌍 ¿Listo para salvar el planeta?",
-            ])
+            return f"¡Hola {usuario.first_name or 'EcoGuardián'}! 🌱 ¿En qué puedo ayudarte con el reciclaje hoy?"
         
-        if 'plástico' in mensaje_lower or 'plastico' in mensaje_lower:
-            return "El plástico tarda entre 100 y 1000 años en degradarse. ¡Reciclar una botella ahorra suficiente energía para mantener encendida una bombilla por 6 horas! ♻️🔋"
+        if 'punto' in mensaje_lower or 'nivel' in mensaje_lower:
+            return f"Tienes {usuario.puntos} puntos y eres nivel {usuario.nivel}. ¡Sigue reciclando para subir! ⭐"
         
-        if 'vidrio' in mensaje_lower:
-            return "¡El vidrio es 100% reciclable infinitamente! Una botella de vidrio reciclada ahorra un 30% de energía. 🫙✨"
-        
-        if 'papel' in mensaje_lower or 'cartón' in mensaje_lower or 'carton' in mensaje_lower:
-            return "Reciclar una tonelada de papel salva 17 árboles. ¡Sigue así! 📄🌳"
-        
-        if 'metal' in mensaje_lower or 'lata' in mensaje_lower or 'aluminio' in mensaje_lower:
-            return "Reciclar una lata de aluminio ahorra el 95% de la energía necesaria para hacer una nueva. ⚡🥫"
-        
-        if 'orgánico' in mensaje_lower or 'organico' in mensaje_lower:
-            return "Los residuos orgánicos pueden convertirse en compost. ¡Un excelente fertilizante natural! 🌱🪱"
-        
-        if any(p in mensaje_lower for p in ['punto', 'puntos', 'nivel', 'ranking']):
-            return f"Tienes {usuario.puntos} puntos y eres nivel {usuario.nivel}. ¡Sigue reciclando para subir! 📊🏆"
-        
-        if 'tip' in mensaje_lower or 'consejo' in mensaje_lower:
-            tips = TipReciclaje.objects.filter(activo=True)
-            if tips.exists():
-                tip = random.choice(tips)
-                return f"💡 {tip.titulo}:\n{tip.contenido}"
-        
-        # Respuesta por defecto
         return random.choice([
-            "¡Excelente pregunta! Sigue reciclando y acumulando puntos. ¿Necesitas tips sobre algún material específico? 🌱",
-            "Como tu EcoBot, te recomiendo separar siempre los residuos. ¿Quieres saber más sobre algún material? ♻️",
-            "¡Cada reciclaje cuenta! Has ganado puntos por tus acciones. ¿En qué más puedo ayudarte? 🌍",
+            "¡Excelente pregunta! Sigue reciclando y acumulando puntos. ¿Necesitas tips? 🌱",
+            "Cada reciclaje cuenta. ¿Quieres saber sobre algún material específico? ♻️",
+            "¡Hola! Como tu EcoBot, te recomiendo separar siempre los residuos. 🌍",
         ])
 
 

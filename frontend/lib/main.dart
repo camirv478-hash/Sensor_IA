@@ -13,6 +13,8 @@ import 'screens/challenges_screen.dart';
 import 'screens/leaderboard_screen.dart';
 import 'screens/chatbot_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/result_screen.dart';
 
 void main() async {  // ← Agregar async
   WidgetsFlutterBinding.ensureInitialized();  // ← Agregar
@@ -57,6 +59,8 @@ class SensorIAApp extends StatelessWidget {
         '/leaderboard': (context) => const LeaderboardScreen(),
         '/chatbot': (context) => const ChatBotScreen(),
         '/history': (context) => const HistoryScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
+        '/result': (context) => const ResultScreen(),
       },
     );
   }
