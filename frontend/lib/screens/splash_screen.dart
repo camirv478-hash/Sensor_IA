@@ -2,21 +2,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'onboarding_screen.dart';
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() =>
-      _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState
-    extends State<SplashScreen>
+class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
 
   late AnimationController glowController;
+  late Animation<double> fadeAnimation;
 
   @override
   void initState() {
@@ -27,16 +24,19 @@ class _SplashScreenState
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
+    fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: glowController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
     Timer(
       const Duration(seconds: 4),
       () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                const OnboardingScreen(),
-          ),
-        );
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/onboarding');
+        }
       },
     );
   }
@@ -49,11 +49,13 @@ class _SplashScreenState
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 375;
 
     return Scaffold(
       body: Stack(
         children: [
-
+          // Background
           Positioned.fill(
             child: Image.asset(
               "assets/images/bg.png",
@@ -61,47 +63,40 @@ class _SplashScreenState
             ),
           ),
 
+          // Dark overlay
           Positioned.fill(
             child: Container(
-              color:
-                  Colors.black.withOpacity(0.55),
+              color: Colors.black.withOpacity(0.55),
             ),
           ),
 
+          // Glowing EcoBot center
           Center(
             child: AnimatedBuilder(
               animation: glowController,
               builder: (_, child) {
                 return Container(
-                  width: 260,
-                  height: 260,
+                  width: isSmallScreen ? 200 : 260,
+                  height: isSmallScreen ? 200 : 260,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            const Color(
-                          0xFF62FFB0,
-                        ).withOpacity(0.5),
-                        blurRadius:
-                            30 +
-                                glowController.value *
-                                    40,
+                        color: const Color(0xFF62FFB0).withOpacity(0.5),
+                        blurRadius: 30 + glowController.value * 40,
                       ),
                     ],
                   ),
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-
                       Image.asset(
                         "assets/images/glow.png",
-                        width: 240,
+                        width: isSmallScreen ? 180 : 240,
                       ),
-
                       Image.asset(
                         "assets/mascots/ecobot_wave.png",
-                        width: 180,
+                        width: isSmallScreen ? 140 : 180,
                       ),
                     ],
                   ),
@@ -110,35 +105,45 @@ class _SplashScreenState
             ),
           ),
 
+          // Title and subtitle
           Positioned(
-            bottom: 90,
+            bottom: size.height * 0.12,
             left: 0,
             right: 0,
-            child: Column(
-              children: [
-
-                Text(
-                  "SensorIA",
-                  style:
-                      GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 42,
-                    fontWeight:
-                        FontWeight.bold,
+            child: FadeTransition(
+              opacity: fadeAnimation,
+              child: Column(
+                children: [
+                  Text(
+                    "SensorIA",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: isSmallScreen ? 32 : 42,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  "Recicla inteligente 🌱",
-                  style:
-                      GoogleFonts.poppins(
-                    color: Colors.white70,
-                    fontSize: 16,
+                  const SizedBox(height: 8),
+                  Text(
+                    "Recicla inteligente 🌱",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white70,
+                      fontSize: isSmallScreen ? 14 : 16,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 40),
+
+                  // Loading indicator
+                  SizedBox(
+                    width: isSmallScreen ? 30 : 40,
+                    height: isSmallScreen ? 30 : 40,
+                    child: const CircularProgressIndicator(
+                      color: Color(0xFF6CFF8F),
+                      strokeWidth: 3,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
