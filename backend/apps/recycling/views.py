@@ -24,8 +24,18 @@ class EscaneoCreateView(generics.CreateAPIView):
     parser_classes = (MultiPartParser, FormParser)
     
     def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user)
-
+        residuo_id = self.request.data.get('residuo')
+        try:
+            residuo = Residuo.objects.get(id=residuo_id)
+        except Residuo.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"residuo": "Residuo no encontrado"})
+        
+        serializer.save(
+            usuario=self.request.user,
+            residuo=residuo,
+            puntos_obtenidos=residuo.puntos_base
+        )
 
 class EscaneoHistoryView(generics.ListAPIView):
     """Historial de escaneos del usuario autenticado."""

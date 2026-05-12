@@ -34,4 +34,7 @@ urlpatterns = [
     
     # App de reciclaje
     path('api/recycling/', include('apps.recycling.urls')),
+
+    #App de gamificacion
+    path('api/gamification/', include('apps.gamification.urls')),
 ]

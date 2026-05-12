@@ -34,16 +34,15 @@ class EscaneoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Escaneo
         fields = ['residuo', 'imagen', 'modo', 'confianza_ia', 'latitud', 'longitud']
+        # Sin read_only_fields
     
     def create(self, validated_data):
-        validated_data['usuario'] = self.context['request'].user
-        if validated_data.get('modo') == 'offline':
-            validated_data['sincronizado'] = False
-        return super().create(validated_data)
+        # El usuario y residuo se asignan en la vista
+        return Escaneo.objects.create(**validated_data)
 
 
 class EscaneoSyncSerializer(serializers.Serializer):
-    """Serializador para sincronizar escaneos offline pendientes."""
+    """Serializador para sincronizar escaneos offline."""
     escaneos = serializers.ListField(
         child=serializers.DictField(),
         help_text="Lista de escaneos offline para sincronizar"
