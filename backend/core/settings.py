@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.recycling',
     'apps.gamification',
-    # 'apps.marketplace',
+    'apps.marketplace',
     # 'apps.chatbot',
 ]
 

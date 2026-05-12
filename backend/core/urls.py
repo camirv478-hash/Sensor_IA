@@ -37,4 +37,7 @@ urlpatterns = [
 
     #App de gamificacion
     path('api/gamification/', include('apps.gamification.urls')),
+
+    #App de marketplace
+    path('api/marketplace/', include('apps.marketplace.urls')),
 ]
