@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     
     # Apps propias (se crearán después)
     'apps.users',
-    # 'apps.recycling',
+    'apps.recycling',
     # 'apps.gamification',
     # 'apps.marketplace',
     # 'apps.chatbot',
