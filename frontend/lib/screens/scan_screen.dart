@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/tflite_service.dart';
 import '../services/api_service.dart';
+import '../services/esp32_service.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -19,6 +20,7 @@ class _ScanScreenState extends State<ScanScreen>
   final ImagePicker _picker = ImagePicker();
   final TFLiteService _tflite = TFLiteService();
   final ApiService _api = ApiService();
+  final Esp32Service _esp32 = Esp32Service();
   
   bool _isAnalyzing = false;
   String _statusText = 'Escanea un residuo';
@@ -82,7 +84,7 @@ class _ScanScreenState extends State<ScanScreen>
         // 2. Intentar enviar al servidor (modo online)
         try {
           final resultadoOnline = await _api.postMultipart(
-            'http://127.0.0.1:8000/api/recycling/scan/',
+            'http://10.49.14.185:8000/api/recycling/scan/',
             {'modo': 'online'},
             File(image.path),
           );
@@ -120,6 +122,10 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   void _navigateToResult(Map<String, dynamic> result) {
+
+    final categoria = result['categoria']?.toString() ?? '';
+    Esp32Service.abrirSegunResiduo(categoria);
+
     Navigator.pushNamed(
       context,
       '/result',
@@ -275,8 +281,8 @@ class _ScanScreenState extends State<ScanScreen>
                           Expanded(
                             child: Text(
                               _isAnalyzing
-                                  ? "🤖 Analizando tu residuo con IA..."
-                                  : "📸 Toma una foto o selecciona de la galería para clasificar tu residuo.",
+                                  ? "Analizando tu residuo con IA..."
+                                  : "Toma una foto o selecciona de la galería para clasificar tu residuo.",
                               style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, height: 1.5),
                             ),
                           ),

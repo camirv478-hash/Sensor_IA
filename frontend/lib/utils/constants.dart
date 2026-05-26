@@ -3,7 +3,7 @@ class ApiConstants {
   // static const String baseUrl = 'http://10.0.2.2:8000/api'; // Android emulator
   // static const String baseUrl = 'http://localhost:8000/api'; // iOS simulator
   // static const String baseUrl = 'http://192.168.1.X:8000/api'; // Dispositivo real
-  static const String baseUrl = 'http://192.168.1.42:8000/api'; // Tu IP real
+  static const String baseUrl = 'http://10.49.14.185:8000/api'; // Tu IP real
   
   // Auth
   static const String login = '$baseUrl/auth/login/';

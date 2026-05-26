@@ -15,6 +15,7 @@ import 'screens/chatbot_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/result_screen.dart';
+import 'screens/esp32_config_screen.dart';
 
 void main() async {  // ← Agregar async
   WidgetsFlutterBinding.ensureInitialized();  // ← Agregar
@@ -61,6 +62,7 @@ class SensorIAApp extends StatelessWidget {
         '/history': (context) => const HistoryScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/result': (context) => const ResultScreen(),
+        '/esp32': (context) => const Esp32ConfigScreen(),
       },
     );
   }

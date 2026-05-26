@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../screens/settings_screen.dart';
+import '../screens/esp32_config_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -232,16 +233,20 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 30),
 
                   /// ACTIONS
-                  actionButton(Icons.edit, "Editar perfil"),
+                  actionButton(Icons.edit, "Editar perfil", onTap: () {}),
                   const SizedBox(height: 14),
-                  actionButton(Icons.settings, "Configuración"),
+                  actionButton(Icons.settings, "Configuración", onTap: () {}),
+                  const SizedBox(height: 14),
+                  actionButton(Icons.router, "Configurar ESP32 🤖", onTap: () {
+                    Navigator.pushNamed(context, '/esp32');
+                  }),
                   const SizedBox(height: 14),
                   GestureDetector(
                     onTap: () async {
                       await auth.logout();
                       Navigator.pushReplacementNamed(context, '/login');
                     },
-                    child: actionButton(Icons.logout, "Cerrar sesión"),
+                    child: actionButton(Icons.logout, "Cerrar sesión", onTap: () {}),
                   ),
                   const SizedBox(height: 40),
                 ],
@@ -294,8 +299,10 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget actionButton(IconData icon, String title) {
-    return Container(
+Widget actionButton(IconData icon, String title, {VoidCallback? onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
@@ -312,6 +319,6 @@ class ProfileScreen extends StatelessWidget {
           const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
         ],
       ),
-    );
-  }
-}
+    ),
+  );
+}}

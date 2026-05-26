@@ -24,7 +24,7 @@ class _RecentActivityState extends State<RecentActivity> {
 
   Future<void> _loadData() async {
     final api = ApiService();
-    final data = await api.getList('http://127.0.0.1:8000/api/recycling/history/');
+    final data = await api.getList('http://10.49.14.185:8000/api/recycling/history/');
     setState(() {
       _actividades = data?.take(3).toList();
       _loading = false;

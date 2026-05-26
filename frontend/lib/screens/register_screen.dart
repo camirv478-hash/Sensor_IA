@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     final result = await _api.post(
-      'http://127.0.0.1:8000/api/users/register/',
+      'http://10.49.14.185:8000/api/users/register/',
       {
         'username': email.split('@').first,
         'email': email,

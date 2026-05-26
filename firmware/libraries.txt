@@ -1,0 +1,8 @@
+# Librerías necesarias para el ESP32
+# Instalar desde Arduino IDE → Gestor de librerías
+#Ademas se debe incluir en propiedades de ArduinoIDE el controlador de la placa a usar 
+
+ESP32Servo        # para controlar los servos
+WebServer         # viene incluida con el core del ESP32
+WiFi              # viene incluida con el core del ESP32
+
