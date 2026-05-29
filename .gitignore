@@ -27,3 +27,5 @@ media/
 .DS_Store
 
 firebase-adminsdk.json
+# Firebase credentials
+backend/credentials/
