@@ -3,7 +3,8 @@ class ApiConstants {
   // static const String baseUrl = 'http://10.0.2.2:8000/api'; // Android emulator
   // static const String baseUrl = 'http://localhost:8000/api'; // iOS simulator
   // static const String baseUrl = 'http://192.168.1.X:8000/api'; // Dispositivo real
-  static const String baseUrl = 'http://192.168.1.42:8000/api'; // Tu IP real
+  // static const String baseUrl = 'http://192.168.1.45:8000/api'; // Tu IP real
+  static const String baseUrl = 'https://hunter-sizably-that.ngrok-free.dev/api'; // Tu IP real
   
   // Auth
   static const String login = '$baseUrl/auth/login/';
@@ -26,6 +27,7 @@ class ApiConstants {
   static const String dailyMissions = '$baseUrl/gamification/daily-missions/';
   static const String achievements = '$baseUrl/gamification/achievements/';
   static const String leaderboard = '$baseUrl/gamification/leaderboard/';
+  static const String myDailyMissions = '$baseUrl/gamification/my-daily-missions/';
   
   // Marketplace
   static const String rewards = '$baseUrl/marketplace/rewards/';
@@ -35,4 +37,16 @@ class ApiConstants {
   // Chatbot
   static const String chatbotSend = '$baseUrl/chatbot/send/';
   static const String chatbotTips = '$baseUrl/chatbot/tips/';
+
+  // Admin
+  static const String createBin = '$baseUrl/admin/bins/create/';
+  static const String scanQR = '$baseUrl/admin/bins/scan/';
+  static const String updateBinStatus = '$baseUrl/admin/bins/status/';
+  
+  static const String passwordReset = '$baseUrl/users/password-reset/';
+  static const String passwordResetConfirm = '$baseUrl/users/password-reset-confirm/';
+
+  static const String myAchievements = '$baseUrl/gamification/my-achievements/';
+
+  static const String featuredRewards = '$baseUrl/marketplace/rewards/featured/';
 }

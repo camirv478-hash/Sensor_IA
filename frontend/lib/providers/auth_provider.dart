@@ -57,4 +57,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return _isLoggedIn;
   }
+
+  Future<String?> getToken() async {
+  return await _api.getToken();
+  }
+  
+  bool get esAdmin {
+  final rol = profile?['rol'] ?? 'user';
+  return rol == 'admin' || rol == 'Administrador';
+  }
 }
