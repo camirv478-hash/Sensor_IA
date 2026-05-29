@@ -7,6 +7,13 @@ class User(AbstractUser):
     Usuario personalizado de SensorIA.
     Extiende AbstractUser para añadir campos de gamificación.
     """
+    ROLES = [
+        ('admin', 'Administrador'),
+        ('user', 'Usuario normal'),
+        ('collector', 'Recolector'),
+    ]
+    
+    rol = models.CharField(max_length=20, choices=ROLES, default='user', verbose_name="Rol del usuario")
     puntos = models.PositiveIntegerField(default=0, verbose_name="Puntos acumulados")
     nivel = models.PositiveIntegerField(default=1, verbose_name="Nivel del usuario")
     avatar = models.ImageField(
@@ -24,10 +31,14 @@ class User(AbstractUser):
         ordering = ['-puntos']
 
     def __str__(self):
-        return f"{self.username} - Nivel {self.nivel} - {self.puntos} pts"
+        return f"{self.username} - {self.rol} - Nivel {self.nivel} - {self.puntos} pts"
 
     def subir_nivel(self):
         """Sube de nivel cuando alcanza ciertos puntos."""
         if self.puntos >= self.nivel * 100:
             self.nivel += 1
             self.save()
+    
+    @property
+    def es_admin(self):
+        return self.rol == 'admin' or self.is_superuser
