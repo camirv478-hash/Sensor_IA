@@ -25,3 +25,5 @@ media/
 
 # Mac/Linux
 .DS_Store
+
+firebase-adminsdk.json
