@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/tflite_service.dart';
 import '../services/api_service.dart';
+import '../utils/constants.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -82,7 +83,7 @@ class _ScanScreenState extends State<ScanScreen>
         // 2. Intentar enviar al servidor (modo online)
         try {
           final resultadoOnline = await _api.postMultipart(
-            'http://127.0.0.1:8000/api/recycling/scan/',
+            ApiConstants.scan,  // ← CORREGIDO: usa la constante
             {'modo': 'online'},
             File(image.path),
           );
