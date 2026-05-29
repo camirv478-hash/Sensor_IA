@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import '../utils/constants.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -43,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     final result = await _api.post(
-      'http://127.0.0.1:8000/api/users/register/',
+      ApiConstants.register,
       {
         'username': email.split('@').first,
         'email': email,
@@ -89,7 +90,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
+    // final height = MediaQuery.of(context).size.height; // No se usa
     final isSmallScreen = width < 375;
 
     return Scaffold(
@@ -104,12 +105,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.45)),
           ),
-          // Glow
-          Positioned(
-            top: -40,
-            right: -20,
-            child: Image.asset('assets/images/glow.png', width: width * 0.7),
-          ),
+          // // Glow
+          // Positioned(
+          //   top: -40,
+          //   right: -20,
+          //   child: Image.asset('assets/images/glow.png', width: width * 0.7),
+          // ),
 
           SafeArea(
             child: SingleChildScrollView(
