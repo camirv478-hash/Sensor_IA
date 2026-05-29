@@ -10,7 +10,9 @@ class ApiService {
   ApiService._internal();
 
   final _storage = const FlutterSecureStorage();
-  String? _token;
+  
+  // Variable estática para mantener el token en memoria
+  static String? _token;
 
   // ============================================
   // AUTENTICACIÓN
@@ -28,22 +30,26 @@ class ApiService {
 
   Future<Map<String, String>> _headers({bool isMultipart = false}) async {
     final token = await getToken();
-    if (isMultipart) {
-      return {
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
-    }
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+    
+    final Map<String, String> headers = {
+      'ngrok-skip-browser-warning': 'true',   // ← CABECERA CLAVE PARA NGROK
     };
+
+    if (isMultipart) {
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+      return headers;
+    }
+
+    headers['Content-Type'] = 'application/json; charset=utf-8';
+    if (token != null) headers['Authorization'] = 'Bearer $token';
+    return headers;
   }
 
   Future<bool> login(String username, String password) async {
     try {
       final response = await http.post(
         Uri.parse(ApiConstants.login),
-        headers: {'Content-Type': 'application/json'},
+        headers: await _headers(),   // ← USA LAS CABECERAS CORRECTAS
         body: jsonEncode({'username': username, 'password': password}),
       );
       if (response.statusCode == 200) {
@@ -68,7 +74,7 @@ class ApiService {
   }
 
   // ============================================
-  // GET, POST, PUT, DELETE genéricos
+  // MÉTODOS HTTP
   // ============================================
 
   Future<Map<String, dynamic>?> get(String url) async {
@@ -103,6 +109,23 @@ class ApiService {
       request.fields.addAll(fields);
       if (image != null) {
         request.files.add(await http.MultipartFile.fromPath('imagen', image.path));
+      }
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      return jsonDecode(responseBody);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // NUEVO MÉTODO PARA ACTUALIZAR AVATAR CON PATCH
+  Future<Map<String, dynamic>?> patchMultipart(String url, Map<String, String> fields, File? image) async {
+    try {
+      var request = http.MultipartRequest('PATCH', Uri.parse(url));
+      request.headers.addAll(await _headers(isMultipart: true));
+      request.fields.addAll(fields);
+      if (image != null) {
+        request.files.add(await http.MultipartFile.fromPath('avatar', image.path));
       }
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
