@@ -17,6 +17,11 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from apps.users.admin_views import admin_dashboard
+
+from django.conf import settings
+from django.conf.urls.static import static
+
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -43,4 +48,9 @@ urlpatterns = [
 
     #App de chatbot
     path('api/chatbot/', include('apps.chatbot.urls')),
-]
+
+    #App de bins
+    path('api/admin/bins/', include('apps.bins.urls')),
+
+    path('admin-panel/', admin_dashboard, name='admin_dashboard'),
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
