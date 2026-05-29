@@ -1,11 +1,23 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import User
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from apps.users.models import User
+from apps.bins.models import Bin  
 
+@login_required
+def admin_dashboard(request):
 
-@admin.register(User)
-class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'nivel', 'puntos', 'is_active')
-    fieldsets = UserAdmin.fieldsets + (
-        ('Gamificación', {'fields': ('puntos', 'nivel', 'avatar', 'biografia')}),
+    total_users = User.objects.count()
+    total_recycling = RecyclingRecord.objects.count()
+    total_bins = SmartBin.objects.count()
+
+    context = {
+        'total_users': total_users,
+        'total_recycling': total_recycling,
+        'total_bins': total_bins,
+    }
+
+    return render(
+        request,
+        'admin_panel/dashboard.html',
+        context
     )

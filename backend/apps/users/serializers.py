@@ -30,11 +30,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """Serializador para ver/editar el perfil del usuario."""
     class Meta:
         model = User
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
-            'puntos', 'nivel', 'avatar', 'biografia', 'fecha_nacimiento'
+            'puntos', 'nivel', 'avatar', 'biografia', 'fecha_nacimiento',
+            'rol',
         )
-        read_only_fields = ('id', 'puntos', 'nivel')
+        read_only_fields = ('id', 'puntos', 'nivel', 'rol')
+        extra_kwargs = {
+            'avatar': {'required': False}
+        }
