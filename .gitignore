@@ -1,31 +1,97 @@
-# Flutter
+# =========================================
+# FLUTTER / DART
+# =========================================
 .dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
 .packages
 .pub/
 build/
 
-# Android
-.gradle/
-local.properties
+# Generated
+*.g.dart
 
-# VSCode
+# =========================================
+# ANDROID
+# =========================================
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# Claves y configuraciones sensibles
+android/key.properties
+android/app/google-services.json
+
+# Keystore
+*.jks
+*.keystore
+
+# Local config Android Studio
+android/local.properties
+
+# =========================================
+# IOS
+# =========================================
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Firebase iOS
+ios/Runner/GoogleService-Info.plist
+
+# =========================================
+# VS CODE / ANDROID STUDIO
+# =========================================
 .vscode/
+.idea/
+*.iml
 
-# Python
+# =========================================
+# PYTHON / DJANGO BACKEND
+# =========================================
 venv/
+.env
+.env.*
 __pycache__/
 *.pyc
 
-# Django
+# SQLite
 db.sqlite3
+
+# Media y logs
 media/
+logs/
+*.log
 
-# Environment
-.env
-
-# Mac/Linux
-.DS_Store
-
+# =========================================
+# KAGGLE / GOOGLE / APIs
+# =========================================
+kaggle.json
+serviceAccountKey.json
 firebase-adminsdk.json
-# Firebase credentials
+credentials.json
+secret.json
+
+# =========================================
+# SISTEMA
+# =========================================
+.DS_Store
+Thumbs.db
+
+# =========================================
+# FIREBASE / GOOGLE CLOUD
+# =========================================
+
+# Carpeta completa de credenciales
 backend/credentials/
+
+# Firebase
+firebase-credentials.json
+*firebase*.json
+*credentials*.json
+
+# Google Cloud
+google-credentials.json
+service-account.json

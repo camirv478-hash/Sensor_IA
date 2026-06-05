@@ -105,7 +105,11 @@ class ApiService {
   Future<Map<String, dynamic>?> postMultipart(String url, Map<String, String> fields, File? image) async {
     try {
       var request = http.MultipartRequest('POST', Uri.parse(url));
-      request.headers.addAll(await _headers(isMultipart: true));
+      final headers = await _headers(isMultipart: true);
+      // Debug: imprimir el token
+      final tokenEnviado = headers['Authorization'];
+      print('Token enviado al escanear: $tokenEnviado');
+      request.headers.addAll(headers);
       request.fields.addAll(fields);
       if (image != null) {
         request.files.add(await http.MultipartFile.fromPath('imagen', image.path));
@@ -116,7 +120,7 @@ class ApiService {
     } catch (e) {
       return null;
     }
-  }
+}
 
   // NUEVO MÉTODO PARA ACTUALIZAR AVATAR CON PATCH
   Future<Map<String, dynamic>?> patchMultipart(String url, Map<String, String> fields, File? image) async {

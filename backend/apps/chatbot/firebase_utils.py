@@ -20,24 +20,32 @@ except Exception as e:
 
 class FirebaseAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
+
         auth_header = request.META.get("HTTP_AUTHORIZATION")
+
         if not auth_header:
-            return None  # Sin cabecera → pasar al siguiente autenticador
+            return None
 
         try:
-            token = auth_header.split(" ")[1]  # "Bearer <token>"
+            token = auth_header.split(" ")[1]
         except IndexError:
-            raise exceptions.AuthenticationFailed("Token no válido")
+            return None
 
         try:
             decoded_token = auth.verify_id_token(token)
+
             uid = decoded_token["uid"]
             email = decoded_token.get("email", "")
-        except Exception as e:
-            raise exceptions.AuthenticationFailed(f"Firebase token inválido: {e}")
 
-        user, created = User.objects.get_or_create(
-            username=uid,
-            defaults={"email": email}
-        )
-        return (user, None)
+            user, created = User.objects.get_or_create(
+                username=uid,
+                defaults={"email": email}
+            )
+
+            return (user, None)
+
+        except Exception:
+            # IMPORTANTE:
+            # si NO es un token Firebase,
+            # dejamos que JWTAuthentication lo procese.
+            return None

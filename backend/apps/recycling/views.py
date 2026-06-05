@@ -15,7 +15,7 @@ from .serializers import (
 from .classifier import classifier
 
 # Importar el cliente de Gemini desde el módulo compartido de chatbot
-from apps.chatbot.views import client as gemini_model  # alias correcto
+from apps.chatbot.views import client as gemini_model
 
 
 # ============================================================
@@ -47,7 +47,6 @@ class EscaneoCreateView(generics.CreateAPIView):
                 confianza = resultado_ia['confianza']
                 puntos_base = resultado_ia['puntos_base']
 
-                # Buscar o crear el residuo en el catálogo
                 residuo = Residuo.objects.filter(
                     categoria=categoria,
                     activo=True
@@ -61,25 +60,26 @@ class EscaneoCreateView(generics.CreateAPIView):
                     )
 
                 # -------------------------------------------------
-                # 2. GEMINI ONLINE - obtener consejo ecológico
+                # 2. GEMINI ONLINE – consejo ecológico + caneca
                 # -------------------------------------------------
                 modo = 'offline'
                 analisis_ia = ""
 
-                if gemini_model:   # <-- usar el alias correcto
+                if gemini_model:
                     try:
-                        # NUEVO PROMPT PERSONALIZADO CON CANECAS DE SENSORIA
-                        prompt = f"""Eres EcoBot de SensorIA. El usuario recicló un residuo: {categoria_display}. 
-Indica en qué caneca debe depositarlo según el sistema SensorIA:
-- Plástico → Caneca Blanca
-- Vidrio → Caneca Verde
-- Metal → Caneca Gris
-- Papel/Cartón → Caneca Azul
-- Orgánico → Caneca Marrón
-Responde en español, máximo 2 oraciones, con emojis."""
+                        prompt = f"""Eres EcoBot de SensorIA, un asistente de reciclaje.
+El usuario acaba de clasificar un residuo como: {categoria_display}.
+Responde EXACTAMENTE en el siguiente formato, sin saludos ni despedidas:
+
+CONSEJO: [Un breve consejo ecológico sobre cómo reciclar este residuo]
+CANECA: [Nombre del color de la caneca donde debe depositarlo según SensorIA: Caneca Blanca, Caneca Verde, Caneca Gris, Caneca Azul o Caneca Marrón]
+
+Ejemplo para Plástico:
+CONSEJO: El plástico tarda cientos de años en degradarse. ¡Recíclalo siempre!
+CANECA: Caneca Blanca"""
 
                         response = gemini_model.models.generate_content(
-                            model="gemini-2.0-flash-lite",  # modelo con mejor cuota gratuita
+                            model="gemini-2.0-flash-lite",
                             contents=prompt
                         )
                         if response.text:
@@ -100,7 +100,6 @@ Responde en español, máximo 2 oraciones, con emojis."""
                     modo=modo,
                 )
 
-                # Guardamos los datos extra para devolverlos en la respuesta
                 self._extra_response = {
                     'escaneo_id': serializer.instance.id,
                     'categoria': categoria_display,
@@ -128,7 +127,7 @@ Responde en español, máximo 2 oraciones, con emojis."""
 
 
 # ============================================================
-# RESTO DE VISTAS (sin cambios, solo asegúrate de tenerlas)
+# RESTO DE VISTAS (sin cambios)
 # ============================================================
 class ResiduoListView(generics.ListAPIView):
     """Listar todos los residuos del catálogo."""
@@ -195,7 +194,6 @@ class EscaneoSyncView(generics.GenericAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-
 class StatsView(generics.GenericAPIView):
     """
     Estadísticas globales para panel admin web.
@@ -203,7 +201,6 @@ class StatsView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-
         total_escaneos = Escaneo.objects.count()
         total_residuos = Residuo.objects.count()
 
