@@ -19,16 +19,16 @@ android/app/debug/
 android/app/profile/
 android/app/release/
 
-# Claves y configuraciones sensibles
-android/key.properties
+# Configuración local Android
+android/local.properties
+
+# Firebase Android
 android/app/google-services.json
 
-# Keystore
+# Claves y certificados
+android/key.properties
 *.jks
 *.keystore
-
-# Local config Android Studio
-android/local.properties
 
 # =========================================
 # IOS
@@ -52,12 +52,18 @@ ios/Runner/GoogleService-Info.plist
 # PYTHON / DJANGO BACKEND
 # =========================================
 venv/
-.env
-.env.*
+.venv/
+
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# SQLite
+# Variables de entorno
+.env
+.env.*
+
+# Base de datos local
 db.sqlite3
 
 # Media y logs
@@ -65,13 +71,30 @@ media/
 logs/
 *.log
 
+# Archivos estáticos generados por collectstatic
+backend/staticfiles/
+
 # =========================================
 # KAGGLE / GOOGLE / APIs
 # =========================================
 kaggle.json
+
+# Firebase / Google Cloud
+backend/credentials/
+
 serviceAccountKey.json
 firebase-adminsdk.json
+firebase-adminsdk*.json
+
 credentials.json
+*credentials*.json
+
+firebase-credentials.json
+*firebase*.json
+
+google-credentials.json
+service-account.json
+
 secret.json
 
 # =========================================
@@ -79,19 +102,3 @@ secret.json
 # =========================================
 .DS_Store
 Thumbs.db
-
-# =========================================
-# FIREBASE / GOOGLE CLOUD
-# =========================================
-
-# Carpeta completa de credenciales
-backend/credentials/
-
-# Firebase
-firebase-credentials.json
-*firebase*.json
-*credentials*.json
-
-# Google Cloud
-google-credentials.json
-service-account.json
