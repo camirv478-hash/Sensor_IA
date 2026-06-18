@@ -1,0 +1,56 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Actualizar Estado - SensorIA{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div>
+        <div class="page-title">Actualizar Estado</div>
+        <div class="page-subtitle">Actualiza el estado y nivel de llenado de una caneca.</div>
+    </div>
+    <div class="mt-3 mt-md-0">
+        <a href="{% url 'admin_bin_list' %}" class="btn btn-outline-light"><i class="fa-solid fa-arrow-left"></i> Volver al listado</a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-panel">
+    <form method="post" action="{% url 'admin_bin_update_status' %}">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Seleccionar caneca</label>
+                <select name="bin_id" class="form-select" required>
+                    <option value="">-- Elige una caneca --</option>
+                    {% for bin in bins %}
+                        <option value="{{ bin.id }}">{{ bin.nombre }} ({{ bin.get_tipo_display }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Nivel de llenado (%)</label>
+                <input type="number" name="fill_level" class="form-control" min="0" max="100" value="0" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">¿Activo?</label>
+                <select name="is_active" class="form-select">
+                    <option value="on">Sí</option>
+                    <option value="">No</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success">Actualizar Estado</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

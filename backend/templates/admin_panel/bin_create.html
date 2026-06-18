@@ -1,0 +1,56 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Crear Caneca - SensorIA{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div>
+        <div class="page-title">Crear Caneca</div>
+        <div class="page-subtitle">Registra una nueva caneca en el sistema.</div>
+    </div>
+    <div class="mt-3 mt-md-0">
+        <a href="{% url 'admin_bin_list' %}" class="btn btn-outline-light"><i class="fa-solid fa-arrow-left"></i> Volver al listado</a>
+    </div>
+</div>
+
+<div class="card-panel">
+    <form method="post" action="{% url 'admin_bin_create' %}">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombre de la caneca</label>
+                <input type="text" name="nombre" class="form-control" placeholder="Caneca Centro" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Tipo de residuo</label>
+                <select name="tipo" class="form-select">
+                    <option value="plastic">Plástico</option>
+                    <option value="glass">Vidrio</option>
+                    <option value="metal">Metal</option>
+                    <option value="paper">Papel</option>
+                    <option value="organic">Orgánico</option>
+                </select>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label">Zona</label>
+                <input type="text"
+                    name="zona"
+                    class="form-control"
+                    placeholder="Centro, Parque Principal, Universidad..."
+                    required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Latitud</label>
+                <input type="number" step="any" name="latitude" class="form-control" placeholder="4.7110" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Longitud</label>
+                <input type="number" step="any" name="longitude" class="form-control" placeholder="-74.0721" required>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success">Guardar Caneca</button>
+            </div>
+        </div>
+    </form>
+    <p class="text-muted-light mt-3">Las coordenadas se pueden obtener desde el mapa del Dashboard o desde la app móvil.</p>
+</div>
+{% endblock %}

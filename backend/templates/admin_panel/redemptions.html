@@ -1,0 +1,87 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Canjes{% endblock %}
+
+{% block content %}
+
+<div class="page-title">
+    🏆 Gestión de Canjes
+</div>
+
+<div class="page-subtitle">
+    Administración de recompensas reclamadas
+</div>
+
+<div class="card-panel mt-4">
+
+<div class="table-responsive">
+
+<table class="table table-dark table-hover">
+
+<thead>
+<tr>
+    <th>Usuario</th>
+    <th>Recompensa</th>
+    <th>Puntos</th>
+    <th>Código</th>
+    <th>Estado</th>
+    <th>Acciones</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for canje in canjes %}
+
+<tr>
+
+    <td>{{ canje.usuario.username }}</td>
+
+    <td>{{ canje.recompensa.nombre }}</td>
+
+    <td>{{ canje.puntos_gastados }}</td>
+
+    <td>{{ canje.codigo_canje }}</td>
+
+    <td>{{ canje.get_estado_display }}</td>
+
+    <td>
+
+        <a href="{% url 'redemption_update_status' canje.id 'aprobado' %}"
+           class="btn btn-sm btn-success">
+           Aprobar
+        </a>
+
+        <a href="{% url 'redemption_update_status' canje.id 'entregado' %}"
+           class="btn btn-sm btn-primary">
+           Entregar
+        </a>
+
+        <a href="{% url 'redemption_update_status' canje.id 'cancelado' %}"
+           class="btn btn-sm btn-danger">
+           Cancelar
+        </a>
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="6" class="text-center">
+        No existen canjes registrados.
+    </td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}

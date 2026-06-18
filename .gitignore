@@ -1,3 +1,7 @@
+# ==============================================================================
+# SENSOR IA - CONFIGURACIÓN DE GITIGNORE UNIFICADA
+# ==============================================================================
+
 # =========================================
 # FLUTTER / DART
 # =========================================
@@ -7,98 +11,102 @@
 .packages
 .pub/
 build/
-
-# Generated
 *.g.dart
 
 # =========================================
-# ANDROID
+# ANDROID / IOS (MOBILE)
 # =========================================
 android/.gradle/
 android/app/debug/
 android/app/profile/
 android/app/release/
-
-# Configuración local Android
 android/local.properties
-
-# Firebase Android
 android/app/google-services.json
-
-# Claves y certificados
 android/key.properties
 *.jks
 *.keystore
 
-# =========================================
-# IOS
-# =========================================
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
-
-# Firebase iOS
 ios/Runner/GoogleService-Info.plist
-
-# =========================================
-# VS CODE / ANDROID STUDIO
-# =========================================
-.vscode/
-.idea/
-*.iml
 
 # =========================================
 # PYTHON / DJANGO BACKEND
 # =========================================
 venv/
 .venv/
-
+env/
+.Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Variables de entorno
+# Variables de entorno y configuración
 .env
 .env.*
 
 # Base de datos local
 db.sqlite3
+*.sqlite3
+*.db
 
-# Media y logs
+# Media, estáticos y logs
 media/
 logs/
 *.log
-
-# Archivos estáticos generados por collectstatic
 backend/staticfiles/
+staticfiles/
 
 # =========================================
-# KAGGLE / GOOGLE / APIs
+# DATASETS / MACHINE LEARNING (¡EVITAR PESO!)
+# =========================================
+# Ignorar datasets completos e imágenes de entrenamiento
+backend/ml_training/dataset/
+**/dataset/trashnet/
+
+# Archivos comprimidos de datos
+garbage-classification.zip
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Checkpoints, historiales y pesos pesados de Keras/TensorFlow
+backend/ml_training/checkpoint_*.h5
+backend/ml_training/training_history.png
+checkpoint_*.weights.h5
+
+# Modelos pesados (.h5) y ligeros (.tflite)
+backend/ml_models/
+*.h5
+*.tflite
+
+# =========================================
+# CREDENCIALES / APIs / SEGURIDAD
 # =========================================
 kaggle.json
-
-# Firebase / Google Cloud
 backend/credentials/
-
 serviceAccountKey.json
 firebase-adminsdk.json
 firebase-adminsdk*.json
-
 credentials.json
 *credentials*.json
-
 firebase-credentials.json
 *firebase*.json
-
 google-credentials.json
 service-account.json
-
 secret.json
 
 # =========================================
-# SISTEMA
+# SISTEMA / IDEs
 # =========================================
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
 .DS_Store
 Thumbs.db

@@ -1,0 +1,36 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Escanear Caneca - SensorIA{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div>
+        <div class="page-title">Escanear Caneca</div>
+        <div class="page-subtitle">Registro de escaneo QR para una caneca.</div>
+    </div>
+    <div class="mt-3 mt-md-0">
+        <a href="{% url 'admin_bin_list' %}" class="btn btn-outline-light"><i class="fa-solid fa-arrow-left"></i> Volver al listado</a>
+    </div>
+</div>
+
+{% if messages %}
+<div class="mb-4">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-panel">
+    <form method="post" action="{% url 'admin_bin_scan' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Código QR</label>
+            <input type="text" name="qr_code" class="form-control" placeholder="BIN-XXXXXXXX" required>
+        </div>
+        <button type="submit" class="btn btn-success">Registrar escaneo</button>
+    </form>
+</div>
+{% endblock %}

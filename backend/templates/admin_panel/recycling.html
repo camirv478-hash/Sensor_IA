@@ -1,0 +1,166 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Reciclajes - SensorIA{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="page-title">♻️ Centro de Reciclaje</div>
+        <div class="page-subtitle">
+            Estadísticas generales del sistema SensorIA
+        </div>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ total_scans }}</h2>
+            <p class="text-muted-light mb-0">
+                Escaneos Totales
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ scans_today }}</h2>
+            <p class="text-muted-light mb-0">
+                Escaneos Hoy
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ total_points }}</h2>
+            <p class="text-muted-light mb-0">
+                Puntos Otorgados
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ total_residues }}</h2>
+            <p class="text-muted-light mb-0">
+                Residuos Registrados
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Estado IA -->
+<div class="card-panel mb-4">
+    <h5 class="mb-3">🤖 Estado de Inteligencia Artificial</h5>
+
+    <div class="row">
+
+        <div class="col-md-6">
+            {% if gemini_online %}
+                <span class="badge bg-success">
+                    Gemini Online
+                </span>
+            {% else %}
+                <span class="badge bg-danger">
+                    Gemini Offline
+                </span>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            {% if modelo_local %}
+                <span class="badge bg-success">
+                    TensorFlow Disponible
+                </span>
+            {% else %}
+                <span class="badge bg-danger">
+                    TensorFlow No Disponible
+                </span>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Últimos escaneos -->
+<div class="card-panel">
+
+    <h5 class="mb-3">
+        📷 Últimos Escaneos
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-dark table-hover">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Residuo</th>
+                    <th>Puntos</th>
+                    <th>Modo IA</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for scan in latest_scans %}
+                <tr>
+                    <td>{{ scan.id }}</td>
+
+                    <td>
+                        {% if scan.usuario %}
+                            {{ scan.usuario.username }}
+                        {% else %}
+                            Anónimo
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if scan.residuo %}
+                            {{ scan.residuo.nombre }}
+                        {% else %}
+                            Desconocido
+                        {% endif %}
+
+                    <td>{{ scan.puntos_obtenidos }}</td>
+
+                    <td>
+                        {% if scan.modo == 'online' %}
+                            <span class="badge bg-success">
+                                Gemini
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">
+                                TensorFlow
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ scan.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No existen escaneos registrados
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Nueva Recompensa{% endblock %}
+
+{% block content %}
+
+<div class="page-title">
+    Nueva Recompensa
+</div>
+
+<div class="card-panel mt-4">
+
+<form method="post">
+
+{% csrf_token %}
+
+<div class="mb-3">
+    <label>Nombre</label>
+    <input type="text"
+           name="nombre"
+           class="form-control"
+           required>
+</div>
+
+<div class="mb-3">
+    <label>Descripción</label>
+    <textarea name="descripcion"
+              class="form-control"></textarea>
+</div>
+
+<div class="mb-3">
+    <label>Categoría</label>
+
+    <select name="categoria"
+            class="form-select">
+
+        {% for value,label in categorias %}
+        <option value="{{ value }}">
+            {{ label }}
+        </option>
+        {% endfor %}
+
+    </select>
+</div>
+
+<div class="mb-3">
+    <label>Puntos requeridos</label>
+    <input type="number"
+           name="costo_puntos"
+           class="form-control"
+           required>
+</div>
+
+<div class="mb-3">
+    <label>Stock</label>
+    <input type="number"
+           name="stock"
+           value="1"
+           class="form-control">
+</div>
+
+<div class="mb-3">
+    <label>Imagen</label>
+    <input type="text"
+           name="imagen"
+           class="form-control">
+</div>
+
+<div class="mb-3">
+    <label>Código</label>
+    <input type="text"
+           name="codigo"
+           class="form-control">
+</div>
+
+<div class="form-check">
+    <input type="checkbox"
+           name="activo"
+           checked
+           class="form-check-input">
+
+    <label class="form-check-label">
+        Activa
+    </label>
+</div>
+
+<div class="form-check mb-3">
+    <input type="checkbox"
+           name="destacado"
+           class="form-check-input">
+
+    <label class="form-check-label">
+        Destacada
+    </label>
+</div>
+
+<button class="btn btn-success">
+    Guardar Recompensa
+</button>
+
+</form>
+
+</div>
+
+{% endblock %}

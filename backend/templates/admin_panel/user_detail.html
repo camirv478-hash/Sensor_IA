@@ -1,0 +1,269 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% load static %}
+
+{% block title %}Detalle de Usuario - SensorIA{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">👤 Perfil de Usuario</h1>
+        <p class="page-subtitle">
+            Administración y configuración del usuario
+        </p>
+    </div>
+
+    <a href="{% url 'admin_user_list' %}"
+       class="btn btn-outline-light">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver
+    </a>
+</div>
+
+<div class="row g-4">
+
+    <!-- PERFIL -->
+    <div class="col-lg-4">
+
+        <div class="card-panel text-center h-100">
+
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}"
+                     class="avatar-lg mb-3"
+                     style="
+                        width:150px;
+                        height:150px;
+                        border-radius:50%;
+                        object-fit:cover;
+                        border:4px solid rgba(108,255,143,.25);
+                     ">
+            {% else %}
+                <div style="
+                    width:150px;
+                    height:150px;
+                    border-radius:50%;
+                    background:#1A2B22;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:auto;
+                    margin-bottom:20px;
+                    font-size:60px;
+                ">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            {% endif %}
+
+            <h3 class="mb-1">
+                {{ user.get_full_name|default:user.username }}
+            </h3>
+
+            <p class="text-muted-light mb-3">
+                {{ user.email }}
+            </p>
+
+            <span class="badge bg-success px-3 py-2">
+                {{ user.get_rol_display }}
+            </span>
+
+            <hr class="my-4">
+
+            <div class="row text-start">
+
+                <div class="col-6 mb-3">
+                    <div class="info-label">Usuario</div>
+                    <div class="fw-bold">{{ user.username }}</div>
+                </div>
+
+                <div class="col-6 mb-3">
+                    <div class="info-label">Nivel</div>
+                    <div class="fw-bold">{{ user.nivel }}</div>
+                </div>
+
+                <div class="col-6">
+                    <div class="info-label">Puntos</div>
+                    <div class="fw-bold">{{ user.puntos }}</div>
+                </div>
+
+                <div class="col-6">
+                    <div class="info-label">Activo</div>
+                    <div class="fw-bold">
+                        {{ user.is_active|yesno:'Sí,No' }}
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- EDITAR -->
+    <div class="col-lg-8">
+
+        <div class="card-panel">
+
+            <h4 class="mb-4">
+                ✏️ Editar información
+            </h4>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Nombre
+                        </label>
+                        <input type="text"
+                               name="first_name"
+                               value="{{ user.first_name }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Apellido
+                        </label>
+                        <input type="text"
+                               name="last_name"
+                               value="{{ user.last_name }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Email
+                        </label>
+                        <input type="email"
+                               name="email"
+                               value="{{ user.email }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            Nivel
+                        </label>
+                        <input type="number"
+                               name="nivel"
+                               value="{{ user.nivel }}"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            Puntos
+                        </label>
+                        <input type="number"
+                               name="puntos"
+                               value="{{ user.puntos }}"
+                               class="form-control">
+                    </div>
+
+                </div>
+
+                <button class="btn btn-success mt-4">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Guardar cambios
+                </button>
+
+            </form>
+
+        </div>
+
+        <!-- SEGURIDAD -->
+
+        <div class="card-panel mt-4">
+
+            <h4 class="mb-4">
+                🔒 Seguridad
+            </h4>
+
+            <form method="post"
+                  action="{% url 'admin_user_password' user.id %}">
+
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-8">
+                        <label class="form-label">
+                            Nueva contraseña
+                        </label>
+
+                        <input type="password"
+                               name="password"
+                               class="form-control"
+                               placeholder="Escribe una nueva contraseña">
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-warning w-100">
+                            <i class="fa-solid fa-key"></i>
+                            Actualizar
+                        </button>
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ESTADÍSTICAS -->
+
+<div class="row mt-4 g-4">
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2 style="color:#6CFF8F;">
+                {{ total_scans|default:0 }}
+            </h2>
+            <div class="text-muted-light">
+                Escaneos
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2 style="color:#6CFF8F;">
+                {{ total_logros|default:0 }}
+            </h2>
+            <div class="text-muted-light">
+                Logros
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2 style="color:#6CFF8F;">
+                {{ total_canjes|default:0 }}
+            </h2>
+            <div class="text-muted-light">
+                Canjes
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2 style="color:#6CFF8F;">
+                {{ user.nivel }}
+            </h2>
+            <div class="text-muted-light">
+                Nivel actual
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

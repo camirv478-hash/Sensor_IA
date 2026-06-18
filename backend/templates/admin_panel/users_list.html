@@ -1,0 +1,214 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Gestión de Usuarios | SensorIA{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">👥 Gestión de Usuarios</h1>
+        <p class="page-subtitle">
+            Administración completa de usuarios registrados en SensorIA
+        </p>
+    </div>
+</div>
+
+<!-- KPI -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h1 style="font-size:3rem;font-weight:700;color:#6CFF8F;">
+                {{ count }}
+            </h1>
+            <div class="text-muted-light">
+                Usuarios registrados
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTROS -->
+<div class="card-panel mb-4">
+    <form method="get" class="row g-3">
+
+        <div class="col-md-4">
+            <label class="form-label">Buscar usuario</label>
+            <input
+                type="text"
+                name="q"
+                value="{{ query }}"
+                class="form-control"
+                placeholder="Nombre, usuario o email">
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Rol</label>
+            <select name="role" class="form-select">
+                {% for value, label in roles %}
+                <option value="{{ value }}"
+                    {% if role_filter == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Nivel mínimo</label>
+            <input
+                type="number"
+                name="min_level"
+                value="{{ min_level }}"
+                class="form-control">
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Nivel máximo</label>
+            <input
+                type="number"
+                name="max_level"
+                value="{{ max_level }}"
+                class="form-control">
+        </div>
+
+        <div class="col-md-2 d-grid">
+            <label class="form-label">&nbsp;</label>
+            <button class="btn btn-success">
+                <i class="fa-solid fa-filter"></i>
+                Filtrar
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- TABLA -->
+<div class="card-panel">
+
+    <h5 class="mb-4">
+        Usuarios registrados
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle">
+
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Nivel</th>
+                    <th>Puntos</th>
+                    <th width="120">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in users %}
+                <tr>
+
+                    <td>
+
+                        <div class="d-flex align-items-center">
+
+                            {% if user.avatar %}
+                                <img
+                                    src="{{ user.avatar.url }}"
+                                    style="
+                                        width:60px;
+                                        height:60px;
+                                        object-fit:cover;
+                                        border-radius:50%;
+                                        margin-right:15px;
+                                        border:2px solid rgba(108,255,143,.2);
+                                    ">
+                            {% else %}
+                                <div style="
+                                    width:60px;
+                                    height:60px;
+                                    border-radius:50%;
+                                    background:#1A2B22;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    margin-right:15px;
+                                ">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                            {% endif %}
+
+                            <div>
+                                <div class="fw-bold">
+                                    {{ user.username }}
+                                </div>
+
+                                <small class="text-muted-light">
+                                    {{ user.first_name }}
+                                    {{ user.last_name }}
+                                </small>
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                    <td>
+                        {{ user.email }}
+                    </td>
+
+                    <td>
+
+                        {% if user.rol == 'admin' %}
+                            <span class="badge bg-danger">
+                                Administrador
+                            </span>
+                        {% else %}
+                            <span class="badge bg-primary">
+                                Usuario
+                            </span>
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        <span class="badge bg-success">
+                            Nivel {{ user.nivel }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ user.puntos }}
+                        </strong>
+                    </td>
+
+                    <td>
+
+                        <a href="{% url 'admin_user_detail' user.id %}"
+                           class="btn btn-sm btn-outline-light">
+                            Ver
+                        </a>
+
+                    </td>
+
+                </tr>
+                {% empty %}
+
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        No se encontraron usuarios
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

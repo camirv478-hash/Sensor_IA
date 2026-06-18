@@ -1,0 +1,207 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}Marketplace - SensorIA{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="page-title">🎁 Marketplace</div>
+        <div class="page-subtitle">
+            Gestión de recompensas y canjes de SensorIA
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <a href="{% url 'reward_create' %}"
+       class="btn btn-success">
+        ➕ Nueva Recompensa
+    </a>
+
+    <a href="{% url 'admin_redemptions' %}"
+        class="btn btn-primary">
+        🏆 Gestionar Canjes
+    </a>
+</div>
+
+
+
+<!-- KPIs -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ total_rewards }}</h2>
+            <p class="text-muted-light mb-0">
+                Recompensas
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ active_rewards }}</h2>
+            <p class="text-muted-light mb-0">
+                Activas
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ total_redemptions }}</h2>
+            <p class="text-muted-light mb-0">
+                Canjes
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-panel text-center">
+            <h2>{{ total_points_spent }}</h2>
+            <p class="text-muted-light mb-0">
+                Puntos Canjeados
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Recompensas -->
+<div class="card-panel mb-4">
+
+    <h5 class="mb-3">
+        🎁 Recompensas Disponibles
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-dark table-hover">
+
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Puntos</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Destacada</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for reward in rewards %}
+                <tr>
+
+                    <td>{{ reward.nombre }}</td>
+
+                    <td>{{ reward.get_categoria_display }}</td>
+
+                    <td>{{ reward.costo_puntos }}</td>
+
+                    <td>
+                        {% if reward.stock == 0 %}
+                            Ilimitado
+                        {% else %}
+                            {{ reward.stock }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if reward.activo %}
+                            <span class="badge bg-success">
+                                Activa
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger">
+                                Inactiva
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if reward.destacado %}
+                            ⭐
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'reward_edit' reward.id %}"
+                           class="btn btn-sm btn-primary">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">
+                        No existen recompensas registradas.
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- Últimos Canjes -->
+<div class="card-panel">
+
+    <h5 class="mb-3">
+        🏆 Últimos Canjes
+    </h5>
+
+    <div class="table-responsive">
+
+        <table class="table table-dark table-hover">
+
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Recompensa</th>
+                    <th>Puntos</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for canje in latest_redemptions %}
+                <tr>
+
+                    <td>{{ canje.usuario.username }}</td>
+
+                    <td>{{ canje.recompensa.nombre }}</td>
+
+                    <td>{{ canje.puntos_gastados }}</td>
+
+                    <td>{{ canje.get_estado_display }}</td>
+
+                    <td>
+                        {{ canje.created_at|date:"d/m/Y H:i" }}
+                    </td>
+
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No existen canjes registrados.
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

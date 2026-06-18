@@ -1,0 +1,166 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Editar Recompensa{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="page-title">Editar Recompensa</div>
+        <div class="page-subtitle">
+            Modifica la información de la recompensa.
+        </div>
+    </div>
+
+    <a href="{% url 'admin_marketplace' %}"
+       class="btn btn-outline-light">
+        Volver
+    </a>
+</div>
+
+<div class="card-panel">
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div class="row g-3">
+
+        <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <input
+                type="text"
+                name="nombre"
+                class="form-control"
+                value="{{ recompensa.nombre }}"
+                required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Categoría</label>
+
+            <select name="categoria" class="form-select">
+
+                {% for value,label in categorias %}
+                <option value="{{ value }}"
+                    {% if recompensa.categoria == value %}
+                    selected
+                    {% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+
+            </select>
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Descripción</label>
+
+            <textarea
+                name="descripcion"
+                rows="4"
+                class="form-control">{{ recompensa.descripcion }}</textarea>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Costo (puntos)</label>
+
+            <input
+                type="number"
+                name="costo_puntos"
+                class="form-control"
+                value="{{ recompensa.costo_puntos }}">
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Stock</label>
+
+            <input
+                type="number"
+                name="stock"
+                class="form-control"
+                value="{{ recompensa.stock }}">
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Descuento (%)</label>
+
+            <input
+                type="number"
+                name="descuento"
+                class="form-control"
+                value="{{ recompensa.descuento }}">
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Código</label>
+
+            <input
+                type="text"
+                name="codigo"
+                class="form-control"
+                value="{{ recompensa.codigo }}">
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Imagen</label>
+
+            <input
+                type="text"
+                name="imagen"
+                class="form-control"
+                value="{{ recompensa.imagen }}">
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="form-check mt-4">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="activo"
+                    {% if recompensa.activo %}checked{% endif %}>
+
+                <label class="form-check-label">
+                    Activa
+                </label>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="form-check mt-4">
+
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="destacado"
+                    {% if recompensa.destacado %}checked{% endif %}>
+
+                <label class="form-check-label">
+                    Destacada
+                </label>
+
+            </div>
+
+        </div>
+
+        <div class="col-12 mt-4">
+
+            <button type="submit"
+                    class="btn btn-success">
+                Guardar cambios
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+</div>
+
+{% endblock %}
