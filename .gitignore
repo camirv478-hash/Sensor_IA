@@ -1,7 +1,3 @@
-# ==============================================================================
-# SENSOR IA - CONFIGURACIÓN DE GITIGNORE UNIFICADA
-# ==============================================================================
-
 # =========================================
 # FLUTTER / DART
 # =========================================
@@ -21,16 +17,28 @@ android/app/debug/
 android/app/profile/
 android/app/release/
 android/local.properties
-android/app/google-services.json
 android/key.properties
 *.jks
 *.keystore
 
+# Google Services (no subir a repo)
+android/app/google-services.json
+
+# =========================================
+# IOS
+# =========================================
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 ios/Runner/GoogleService-Info.plist
+
+# =========================================
+# IDEs (VS CODE / ANDROID STUDIO)
+# =========================================
+.vscode/
+.idea/
+*.iml
 
 # =========================================
 # PYTHON / DJANGO BACKEND
@@ -39,12 +47,13 @@ venv/
 .venv/
 env/
 .Python
+
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Variables de entorno y configuración
+# Variables de entorno (CRÍTICO)
 .env
 .env.*
 
@@ -53,60 +62,90 @@ db.sqlite3
 *.sqlite3
 *.db
 
-# Media, estáticos y logs
-media/
+# Logs
 logs/
 *.log
+
+# Staticfiles Django
 backend/staticfiles/
-staticfiles/
 
 # =========================================
-# DATASETS / MACHINE LEARNING (¡EVITAR PESO!)
+# MEDIA (subidas del usuario)
 # =========================================
-# Ignorar datasets completos e imágenes de entrenamiento
+media/
+
+# =========================================
+# MACHINE LEARNING / IA
+# =========================================
+
+# datasets pesados
 backend/ml_training/dataset/
 **/dataset/trashnet/
 
-# Archivos comprimidos de datos
-garbage-classification.zip
-*.zip
-*.tar.gz
-*.rar
-*.7z
-
-# Checkpoints, historiales y pesos pesados de Keras/TensorFlow
+# checkpoints y training
 backend/ml_training/checkpoint_*.h5
 backend/ml_training/training_history.png
 checkpoint_*.weights.h5
 
-# Modelos pesados (.h5) y ligeros (.tflite)
-backend/ml_models/
+# modelos (IMPORTANTE: no subir pesos)
+# ignorar todo excepto lo necesario en producción
+backend/ml_models/*.h5
+backend/ml_models/waste_model_old.*
+backend/ml_models/*.png
+backend/ml_models/*.csv
+
+# SÍ subir modelo de producción
+!backend/ml_models/waste_model_12classes.tflite
+!backend/ml_models/classes.txt
+
+# formatos de modelos
 *.h5
 *.tflite
 
 # =========================================
+# COMPRESSED FILES (solo datasets/backups si existen)
+# =========================================
+*.tar.gz
+*.rar
+*.7z
+
+# ⚠️ OJO: NO ignoramos todos los .zip
+# (puede romper assets del proyecto)
+
+# =========================================
 # CREDENCIALES / APIs / SEGURIDAD
 # =========================================
-kaggle.json
+
+# Firebase / Google Cloud
 backend/credentials/
+
 serviceAccountKey.json
 firebase-adminsdk.json
 firebase-adminsdk*.json
+
 credentials.json
 *credentials*.json
+
 firebase-credentials.json
 *firebase*.json
+
 google-credentials.json
 service-account.json
+
 secret.json
+kaggle.json
 
 # =========================================
-# SISTEMA / IDEs
+# SISTEMA / OS FILES
 # =========================================
-.vscode/
-.idea/
-*.iml
-*.swp
-*.swo
 .DS_Store
 Thumbs.db
+
+# Swap files (editores)
+*.swp
+*.swo
+
+# =========================================
+# OTROS ARCHIVOS
+# =========================================
+backend/test_images/

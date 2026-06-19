@@ -41,8 +41,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success && mounted) {
       Navigator.pushReplacementNamed(context, '/home');
     } else if (mounted) {
+      final error = Provider.of<AuthProvider>(context, listen: false).errorMessage ?? 'Credenciales incorrectas';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales incorrectas')),
+        SnackBar(content: Text(error)),
       );
     }
   }

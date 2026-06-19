@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -58,22 +60,54 @@ class _ResultScreenState extends State<ResultScreen>
   // 1. FUNCIÓN PARA OBTENER LA IMAGEN DE LA CANECA SEGÚN EL COLOR
   // ============================================================
   String getBinImage(String caneca) {
-    switch (caneca.toUpperCase()) {
-      case 'AZUL':
-        return 'assets/bins/blue_bin.png';
+    final key = caneca.toUpperCase().trim()
+        .replaceAll('Á', 'A')
+        .replaceAll('É', 'E')
+        .replaceAll('Í', 'I')
+        .replaceAll('Ó', 'O')
+        .replaceAll('Ú', 'U')
+        .replaceAll('Ñ', 'N');
+        
+    switch (key) {
       case 'BLANCA':
-        return 'assets/bins/white_bin.png';
+        return 'assets/bins/white_bin.png'; // Plástico, Vidrio, Cartón, Papel, Metal
       case 'VERDE':
-        return 'assets/bins/green_bin.png';
+        return 'assets/bins/green_bin.png'; // Orgánicos y desechos agrícolas
+      case 'NEGRA':
       case 'GRIS':
-        return 'assets/bins/gray_bin.png';
+        return 'assets/bins/gray_bin.png';  // No aprovechables / Especiales
+      case 'AZUL':
+        return 'assets/bins/blue_bin.png';  // Plásticos clásicos
       default:
-        return 'assets/bins/gray_bin.png'; // Fallback por defecto
+        return 'assets/bins/gray_bin.png';  // Fallback por defecto
     }
   }
 
   // ============================================================
-  // 2. EXTRAER EL COLOR DE LA CANECA DEL TEXTO DE LA IA
+  // 2. REGLA DE NEGOCIO: ASIGNAR COLOR AUTOMÁTICO EN MODO OFFLINE
+  // ============================================================
+  String obtenerColorPorCategoria(String categoria) {
+    switch (categoria.toLowerCase().trim()) {
+      case 'plástico':
+      case 'plastico':
+      case 'vidrio':
+      case 'metal':
+      case 'cartón':
+      case 'carton':
+      case 'papel':
+        return 'BLANCA'; // Residuos aprovechables limpios y secos (Norma de reciclaje)
+      case 'orgánico':
+      case 'organico':
+        return 'VERDE';  // Residuos orgánicos aprovechables
+      case 'electronico':
+      case 'baja_confianza':
+      default:
+        return 'GRIS';   // No aprovechables / Centros de acopio especiales
+    }
+  }
+
+  // ============================================================
+  // 3. EXTRAER EL COLOR DE LA CANECA DEL TEXTO DE LA IA (ONLINE)
   // ============================================================
   String extraerColorCaneca(String analisis) {
     final lineas = analisis.split('\n');
@@ -87,11 +121,12 @@ class _ResultScreenState extends State<ResultScreen>
         }
       }
     }
-    return 'GRIS'; // Si no encuentra el formato, usa el gris por defecto
+    // Si está online pero no encuentra la línea exacta, infiere usando la categoría
+    return obtenerColorPorCategoria(_categoria);
   }
 
   IconData get _categoriaIcon {
-    switch (_categoria.toLowerCase()) {
+    switch (_categoria.toLowerCase().trim()) {
       case 'plástico':
       case 'plastico':
         return Icons.local_drink;
@@ -118,10 +153,13 @@ class _ResultScreenState extends State<ResultScreen>
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    // Determinar qué imagen de caneca mostrar
-    final String binImage = _modo == 'online' && _analisisIA.isNotEmpty
-        ? getBinImage(extraerColorCaneca(_analisisIA))
-        : getBinImage('GRIS');
+    
+    // DETERMINACIÓN HÍBRIDA DE LA CANECA
+    final String binColor = (_modo == 'online' && _analisisIA.isNotEmpty)
+        ? extraerColorCaneca(_analisisIA)
+        : obtenerColorPorCategoria(_categoria);
+
+    final String binImage = getBinImage(binColor);
 
     return Scaffold(
       backgroundColor: const Color(0xFF07110B),
@@ -147,7 +185,7 @@ class _ResultScreenState extends State<ResultScreen>
                         Text("Resultado",
                             style: GoogleFonts.poppins(
                                 color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                        buildIconButton(Icons.share_outlined, () {}),
+                        buildIconButton(Icons.share_outlined, _shareResult),
                       ],
                     ),
                     const SizedBox(height: 30),
@@ -165,7 +203,7 @@ class _ResultScreenState extends State<ResultScreen>
                     ),
                     const SizedBox(height: 40),
 
-                    // CANECA CON GLOW (AHORA ES DINÁMICA)
+                    // CANECA CON GLOW DINÁMICO
                     SizedBox(
                       width: width * 0.72,
                       height: width * 0.72,
@@ -195,7 +233,7 @@ class _ResultScreenState extends State<ResultScreen>
                                   return Transform.translate(
                                     offset: Offset(0, -6 + (floatController.value * 12)),
                                     child: Image.asset(
-                                      binImage, // ← ¡Aquí se aplica la imagen dinámica!
+                                      binImage,
                                       width: width * 0.75,
                                       height: width * 0.75,
                                       fit: BoxFit.contain,
@@ -243,7 +281,7 @@ class _ResultScreenState extends State<ResultScreen>
                               children: [
                                 Icon(_categoriaIcon, color: const Color(0xFF6CFF8F)),
                                 const SizedBox(width: 10),
-                                Text(_categoria,
+                                Text(_categoria.toUpperCase(),
                                     style: GoogleFonts.poppins(
                                         color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                               ],
@@ -403,5 +441,15 @@ class _ResultScreenState extends State<ResultScreen>
         child: Icon(icon, color: Colors.white),
       ),
     );
+  }
+
+  void _shareResult() {
+    final texto = 'He reciclado $_categoria y gané +$_puntos puntos! Confianza: ${_confianza.toStringAsFixed(1)}%.';
+    Clipboard.setData(ClipboardData(text: texto));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resultado copiado al portapapeles'), backgroundColor: Color(0xFF6CFF8F)),
+      );
+    }
   }
 }

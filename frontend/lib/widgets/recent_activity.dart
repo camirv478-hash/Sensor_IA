@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 // import 'package:provider/provider.dart';
 // import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../utils/constants.dart';
 
 
 class RecentActivity extends StatefulWidget {
@@ -24,7 +25,7 @@ class _RecentActivityState extends State<RecentActivity> {
 
   Future<void> _loadData() async {
     final api = ApiService();
-    final data = await api.getList('http://127.0.0.1:8000/api/recycling/history/');
+    final data = await api.getList(ApiConstants.history);
     setState(() {
       _actividades = data?.take(3).toList();
       _loading = false;

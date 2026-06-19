@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../utils/constants.dart';
 
 class ChatBotScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
+  final ApiService _api = ApiService();
   bool _isLoading = false;
   bool _isOnline = true;
 
@@ -44,7 +48,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     _messages.add({
       "isBot": true,
       "text": "¡Hola! Soy EcoBot 🌱 ¿En qué puedo ayudarte hoy?",
-      "isOffline": false, // El mensaje inicial no es offline
+      "isOffline": false,
     });
   }
 
@@ -56,10 +60,49 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     super.dispose();
   }
 
+  // ============================================================
+  // LÓGICA DE ASIGNACIÓN DE IMÁGENES DE CANECA (IGUAL A RESULT_SCREEN)
+  // ============================================================
+  String getBinImage(String caneca) {
+    final key = caneca.toUpperCase().trim()
+        .replaceAll('Á', 'A')
+        .replaceAll('É', 'E')
+        .replaceAll('Í', 'I')
+        .replaceAll('Ó', 'O')
+        .replaceAll('Ú', 'U')
+        .replaceAll('Ñ', 'N');
+        
+    switch (key) {
+      case 'BLANCA':
+        return 'assets/bins/white_bin.png';
+      case 'VERDE':
+        return 'assets/bins/green_bin.png';
+      case 'NEGRA':
+      case 'GRIS':
+        return 'assets/bins/gray_bin.png';
+      case 'AZUL':
+        return 'assets/bins/blue_bin.png';
+      default:
+        return ''; // Retorna vacío si no es un patrón explícito de caneca
+    }
+  }
+
+  String extraerColorCaneca(String analisis) {
+    final lineas = analisis.split('\n');
+    for (final linea in lineas) {
+      if (linea.trim().toUpperCase().startsWith('CANECA:')) {
+        final partes = linea.split(':');
+        if (partes.length >= 2) {
+          return partes[1].trim().split(' ').last.trim();
+        }
+      }
+    }
+    return '';
+  }
+
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
-    // Agregar mensaje del usuario
     setState(() {
       _messages.add({"isBot": false, "text": text, "isOffline": false});
     });
@@ -73,40 +116,55 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     bool usedOfflineFallback = false;
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final token = await auth.getToken();
+      Map<String, dynamic>? data;
 
-      final token = await user.getIdToken();
-      if (token == null || token.isEmpty) throw Exception('No token Firebase');
-
-      final response = await http.post(
-        Uri.parse(ApiConstants.chatbotSend),
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'mensaje': text}),
-      ).timeout(const Duration(seconds: 8));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        botResponse = data['mensaje_bot']?['contenido'] ??
-            data['respuesta'] ??
-            data['detail'] ??
-            '🌱 EcoBot no encontró respuesta.';
-        onlineSuccess = true;
-        // Si el servidor respondió, estamos en línea
-        _isOnline = true;
-        usedOfflineFallback = false;
-      } else {
-        throw Exception('Error servidor ${response.statusCode}');
+      if (token != null && token.isNotEmpty) {
+        data = await _api.post(ApiConstants.chatbotSend, {'mensaje': text});
       }
+
+      if (data == null) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) throw Exception('Usuario no autenticado');
+
+        final firebaseToken = await user.getIdToken();
+        if (firebaseToken == null || firebaseToken.isEmpty) throw Exception('No token Firebase');
+
+        final response = await http.post(
+          Uri.parse(ApiConstants.chatbotSend),
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': 'Bearer $firebaseToken',
+          },
+          body: jsonEncode({'mensaje': text}),
+        ).timeout(const Duration(seconds: 8));
+
+        if (response.statusCode == 200) {
+          data = jsonDecode(response.body);
+        } else {
+          throw Exception('Error servidor ${response.statusCode}');
+        }
+      }
+
+      if (data != null) {
+        final contenido = data['mensaje_bot']?['contenido'];
+        botResponse = contenido?.toString() ??
+            data['respuesta']?.toString() ??
+            data['detail']?.toString() ??
+            '🌱 EcoBot no encontró respuesta.';
+      } else {
+        botResponse = '🌱 EcoBot no encontró respuesta.';
+      }
+
+      onlineSuccess = true;
+      _isOnline = true;
+      usedOfflineFallback = false;
     } catch (e) {
       print("❌ Chatbot error: $e");
       onlineSuccess = false;
     }
 
-    // Si falló la conexión, mostrar mensaje de advertencia (solo la primera vez)
     if (!onlineSuccess) {
       usedOfflineFallback = true;
       if (_isOnline) {
@@ -176,7 +234,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
           SafeArea(
             child: Column(
               children: [
-                // Header (sin cambios)
+                // Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Row(
@@ -248,9 +306,6 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 ),
                 const SizedBox(height: 10),
 
-                // ===========================
-                // BANNER OFFLINE (NUEVO)
-                // ===========================
                 if (!_isOnline)
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -311,6 +366,11 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                       final message = _messages[index];
                       final isBot = message["isBot"];
                       final isOffline = message["isOffline"] ?? false;
+                      final textoMensaje = message["text"] ?? '';
+
+                      // Si es el bot, intentamos extraer la caneca para renderizarla de manera fluida
+                      final String detectedColor = isBot ? extraerColorCaneca(textoMensaje) : '';
+                      final String binImageAsset = detectedColor.isNotEmpty ? getBinImage(detectedColor) : '';
 
                       return Column(
                         crossAxisAlignment: isBot ? CrossAxisAlignment.start : CrossAxisAlignment.end,
@@ -332,18 +392,48 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                                   bottomRight: Radius.circular(isBot ? 24 : 4),
                                 ),
                               ),
-                              child: Text(
-                                message["text"],
-                                style: GoogleFonts.poppins(
-                                  color: isBot ? Colors.white : Colors.black,
-                                  fontSize: 15,
-                                  height: 1.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    textoMensaje,
+                                    style: GoogleFonts.poppins(
+                                      color: isBot ? Colors.white : Colors.black,
+                                      fontSize: 15,
+                                      height: 1.5,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  // INTEGRACIÓN DE CANECA VISUAL EN EL MENSAJE
+                                  if (binImageAsset.isNotEmpty) ...[
+                                    const SizedBox(height: 12),
+                                    Divider(color: const Color(0xFF6CFF8F).withOpacity(0.2), thickness: 1),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.asset(
+                                          binImageAsset,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.contain,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          "Depósito sugerido",
+                                          style: GoogleFonts.poppins(
+                                            color: const Color(0xFF6CFF8F),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ),
-                          // Badge indicador de origen del mensaje (solo para respuestas del bot)
                           if (isBot && isOffline)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 18),
@@ -388,7 +478,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                   ),
                 ),
 
-                // Input (sin cambios)
+                // Input
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Container(
@@ -456,7 +546,6 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   }
 }
 
-// --- Indicador de escritura (sin cambios) ---
 class _TypingIndicator extends StatefulWidget {
   const _TypingIndicator();
 

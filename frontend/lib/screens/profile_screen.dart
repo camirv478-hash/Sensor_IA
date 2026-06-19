@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -325,6 +326,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: actionButton(Icons.settings, "Configuración"),
                     ),
                     const SizedBox(height: 14),
+                      // BOTÓN PANEL ADMIN (solo para admins)
+                      if (auth.esAdmin)
+                        Column(
+                          children: [
+                            InkWell(
+                              borderRadius: BorderRadius.circular(22),
+                              onTap: () async {
+                                final adminUrl = ApiConstants.baseUrl.replaceAll('/api', '/admin');
+                                if (await canLaunchUrl(Uri.parse(adminUrl))) {
+                                  await launchUrl(Uri.parse(adminUrl), mode: LaunchMode.externalApplication);
+                                }
+                              },
+                              child: actionButton(Icons.admin_panel_settings, "Panel Admin", bgColor: const Color(0xFFFF6B6B)),
+                            ),
+                            const SizedBox(height: 14),
+                          ],
+                        ),
                     InkWell(
                       borderRadius: BorderRadius.circular(22),
                       onTap: () async {
@@ -350,10 +368,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildAvatar(String? avatarUrl) {
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
-      // Construir URL completa del avatar
+      String effectiveUrl = avatarUrl;
+
+      // Caso raro: algunos valores pueden venir con una barra inicial seguida de
+      // un esquema ("/http://...") — normalizar quitando la barra.
+      if (effectiveUrl.startsWith('/http')) {
+        effectiveUrl = effectiveUrl.substring(1);
+      }
+
+      // Si la URL ya es absoluta (comienza con http), usarla tal cual
+      if (effectiveUrl.startsWith('http')) {
+        return Image.network(
+          '$effectiveUrl?t=${DateTime.now().millisecondsSinceEpoch}',
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _defaultAvatar(),
+        );
+      }
+
+      // Si es relativa, construir URL completa
       final baseUrl = ApiConstants.baseUrl.replaceAll('/api', '');
-      final fullUrl = baseUrl + (avatarUrl.startsWith('/') ? avatarUrl : '/$avatarUrl');
-      // Parámetro aleatorio para evitar caché
+      final fullUrl = baseUrl + (effectiveUrl.startsWith('/') ? effectiveUrl : '/$effectiveUrl');
+
       return Image.network(
         '$fullUrl?t=${DateTime.now().millisecondsSinceEpoch}',
         fit: BoxFit.cover,
@@ -409,18 +444,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget actionButton(IconData icon, String title) {
+  Widget actionButton(IconData icon, String title, {Color? bgColor, Color? iconColor}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: const Color(0xFF13241A),
+        color: bgColor ?? const Color(0xFF13241A),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFF6CFF8F).withOpacity(0.08)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF6CFF8F)),
+          Icon(icon, color: iconColor ?? const Color(0xFF6CFF8F)),
           const SizedBox(width: 14),
           Text(title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
           const Spacer(),

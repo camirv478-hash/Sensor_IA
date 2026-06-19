@@ -2,11 +2,31 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer, UserProfileSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import RegisterSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer
 
 from rest_framework.parsers import MultiPartParser, FormParser
 
 User = get_user_model()
+
+
+# ✅ Custom Permission para validar rol='admin' en lugar de is_superuser
+class IsAdminUser(permissions.BasePermission):
+    """
+    Permite acceso solo a usuarios con rol='admin' o is_superuser=True
+    """
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Admin si tiene rol='admin' O es superuser
+        return request.user.rol == 'admin' or request.user.is_superuser
+
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = (permissions.AllowAny,)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -15,11 +35,24 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print('Register validation errors:', serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class UserListView(generics.ListAPIView):
+    """
+    ✅ Listar todos los usuarios (solo admin).
+    Usa custom permission para aceptar rol='admin' además de is_superuser.
+    """
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminUser,)  # ✅ Usar custom permission
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """

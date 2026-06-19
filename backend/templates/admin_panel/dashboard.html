@@ -1,160 +1,379 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>SensorIA Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        *{ margin:0; padding:0; box-sizing:border-box; }
-        body{ background:#07110B; color:white; font-family:'Segoe UI',sans-serif; overflow-x:hidden; }
-        .sidebar{ width:270px; height:100vh; position:fixed; background:linear-gradient(180deg, #0D1B13, #07110B); padding:30px; border-right:1px solid rgba(255,255,255,.05); }
-        .logo{ color:#6CFF8F; font-size:32px; font-weight:bold; margin-bottom:40px; }
-        .menu-item{ padding:16px 18px; border-radius:18px; margin-bottom:12px; transition:.3s; cursor:pointer; color:#B9C5BC; }
-        .menu-item:hover{ background:#13241A; color:white; transform:translateX(5px); }
-        .menu-item i{ margin-right:12px; }
-        .content{ margin-left:270px; padding:35px; }
-        .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:35px; }
-        .dashboard-title{ font-size:38px; font-weight:bold; }
-        .dashboard-subtitle{ color:#8FA497; }
-        .card-sensoria{ background:linear-gradient(145deg, #13241A, #1B3526); border-radius:28px; padding:28px; border:1px solid rgba(108,255,143,.08); transition:.3s; position:relative; overflow:hidden; }
-        .card-sensoria:hover{ transform:translateY(-6px); box-shadow:0 20px 40px rgba(108,255,143,.08); }
-        .card-sensoria::before{ content:''; position:absolute; width:200px; height:200px; background:rgba(108,255,143,.04); border-radius:50%; top:-80px; right:-80px; }
-        .card-icon{ width:65px; height:65px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:20px; background:linear-gradient(135deg, #6CFF8F, #00BCD4); color:black; }
-        .card-title{ color:#9FB5A4; font-size:15px; }
-        .card-value{ font-size:42px; font-weight:bold; margin-top:10px; }
-        .chart-card{ background:#13241A; border-radius:30px; padding:30px; margin-top:30px; }
-        .activity-card{ background:#13241A; border-radius:30px; padding:30px; height:100%; }
-        .activity-item{ display:flex; align-items:center; margin-bottom:20px; }
-        .activity-icon{ width:48px; height:48px; border-radius:15px; background:#1F3929; display:flex; align-items:center; justify-content:center; margin-right:15px; color:#6CFF8F; }
-        .progress{ background:#1A2B22; height:10px; border-radius:20px; }
-        .progress-bar{ background:linear-gradient(90deg, #6CFF8F, #00BCD4); }
-        @media(max-width:992px){ .sidebar{ width:100%; height:auto; position:relative; } .content{ margin-left:0; } }
-    </style>
-</head>
-<body>
-<div class="sidebar">
-    <div class="logo">🌱 SensorIA</div>
-    <div class="menu-item"><i class="fa-solid fa-chart-line"></i>Dashboard</div>
-    <div class="menu-item"><i class="fa-solid fa-users"></i>Usuarios</div>
-    <div class="menu-item"><i class="fa-solid fa-recycle"></i>Reciclajes</div>
-    <div class="menu-item"><i class="fa-solid fa-trash"></i>Contenedores</div>
-    <div class="menu-item"><i class="fa-solid fa-robot"></i>IA Gemini</div>
-    <div class="menu-item"><i class="fa-solid fa-store"></i>Marketplace</div>
-</div>
+{% extends 'admin_panel/base_admin.html' %}
+{% load static %}
 
-<div class="content">
+{% block title %}Dashboard SensorIA{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
     <div class="topbar">
         <div>
-            <div class="dashboard-title">Dashboard IA</div>
-            <div class="dashboard-subtitle">Monitoreo inteligente de SensorIA</div>
+            <div class="dashboard-title">🌱 SensorIA Control Center</div>
+            <div class="dashboard-subtitle">Plataforma inteligente para gestión de reciclaje y sostenibilidad</div>
         </div>
         <div>
             {% if gemini_online %}
-                <span class="badge bg-success p-3">Gemini Online</span>
+                <span class="badge bg-success p-3">🟢 Gemini Online</span>
             {% else %}
-                <span class="badge bg-warning p-3">Gemini Offline</span>
+                <span class="badge bg-danger p-3">🔴 Gemini Offline</span>
             {% endif %}
         </div>
     </div>
 
-    <!-- STATS -->
+    <!-- HERO -->
+    <div class="card-panel mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="mb-3">Bienvenida al panel administrativo</h2>
+                <p class="text-muted-light mb-0">Administra usuarios, reciclajes, IA, marketplace y contenedores desde un único lugar.</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div style="font-size:80px;">♻️</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIS -->
     <div class="row g-4">
-        <div class="col-lg-4">
+        <div class="col-md-6 col-xl-3">
             <div class="card-sensoria">
                 <div class="card-icon"><i class="fa-solid fa-users"></i></div>
-                <div class="card-title">Usuarios Totales</div>
+                <div class="card-title">Usuarios</div>
                 <div class="card-value">{{ total_users }}</div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-md-6 col-xl-3">
             <div class="card-sensoria">
-                <div class="card-icon"><i class="fa-solid fa-recycle"></i></div>
-                <div class="card-title">Reciclajes</div>
-                <div class="card-value">{{ total_recycling }}</div>
+                <div class="card-icon"><i class="fa-solid fa-camera"></i></div>
+                <div class="card-title">Escaneos</div>
+                <div class="card-value">{{ total_scans }}</div>
             </div>
         </div>
-        <div class="col-lg-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card-sensoria">
+                <div class="card-icon"><i class="fa-solid fa-recycle"></i></div>
+                <div class="card-title">Residuos</div>
+                <div class="card-value">{{ total_residues }}</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="card-sensoria">
+                <div class="card-icon"><i class="fa-solid fa-star"></i></div>
+                <div class="card-title">Puntos Otorgados</div>
+                <div class="card-value">{{ puntos_otorgados }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEGUNDA FILA -->
+    <div class="row g-4 mt-1">
+        <div class="col-md-6">
             <div class="card-sensoria">
                 <div class="card-icon"><i class="fa-solid fa-trash"></i></div>
                 <div class="card-title">Contenedores</div>
                 <div class="card-value">{{ total_bins }}</div>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="card-sensoria">
+                <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
+                <div class="card-title">Precisión IA</div>
+                <div class="card-value">{{ precision_ia }}%</div>
+            </div>
+        </div>
     </div>
 
-    <!-- CHART + ACTIVITY -->
+    <!-- GRAFICA -->
     <div class="row mt-4 g-4">
         <div class="col-lg-8">
             <div class="chart-card">
-                <h4 class="mb-4">Actividad de reciclaje</h4>
+                <h4 class="mb-4">📈 Actividad Semanal</h4>
                 <canvas id="recyclingChart"></canvas>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="activity-card">
-                <h4 class="mb-4">IA Status</h4>
+                <h4 class="mb-4">Estado de IA</h4>
                 <div class="activity-item">
-                    <div class="activity-icon"><i class="fa-solid fa-wifi"></i></div>
+                    <div class="activity-icon"><i class="fa-solid fa-robot"></i></div>
                     <div>
                         <strong>Gemini</strong>
-                        <p class="{% if gemini_online %}text-success{% else %}text-warning{% endif %} mb-0">
-                            {{ gemini_online|yesno:"Conectado,Desconectado" }}
+                        <p class="mb-0">
+                            {% if gemini_online %}🟢 Conectado{% else %}🔴 Desconectado{% endif %}
                         </p>
                     </div>
                 </div>
                 <div class="activity-item">
                     <div class="activity-icon"><i class="fa-solid fa-brain"></i></div>
                     <div>
-                        <strong>Modelo Local</strong>
-                        <p class="{% if modelo_local_cargado %}text-info{% else %}text-danger{% endif %} mb-0">
-                            {{ modelo_local_cargado|yesno:"TensorFlow activo,No cargado" }}
+                        <strong>TensorFlow</strong>
+                        <p class="mb-0">
+                            {% if modelo_local_cargado %}🟢 Activo{% else %}🔴 No disponible{% endif %}
                         </p>
                     </div>
                 </div>
                 <hr>
-                <h5 class="mb-3">Rendimiento IA</h5>
-                <p>Precisión</p>
-                <div class="progress mb-4">
-                    <div class="progress-bar" style="width:{{ precision_ia }}%">{{ precision_ia }}%</div>
+                <h6>Escaneos Online</h6>
+                <div class="progress mb-3">
+                    <div class="progress-bar"style="width:{{ porcentaje_online }}%">{{ porcentaje_online }}%</div>
                 </div>
-                <p>Clasificación online</p>
-                <div class="progress mb-4">
-                    <div class="progress-bar" style="width:{{ porcentaje_online }}%">{{ porcentaje_online }}%</div>
-                </div>
-                <p>Escaneos offline</p>
+                <h6>Escaneos Offline</h6>
                 <div class="progress">
-                    <div class="progress-bar" style="width:{{ porcentaje_offline }}%">{{ porcentaje_offline }}%</div>
+                    <div class="progress-bar"style="width:{{ porcentaje_offline }}%">{{ porcentaje_offline }}%</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- ACCESOS RAPIDOS -->
+    <div class="row mt-4 g-4">
+        <div class="col-lg-4">
+            <div class="card-panel text-center">
+                <h4>🗑️ Contenedores</h4>
+                <p class="text-muted-light">Gestiona las canecas inteligentes</p>
+                <a href="{% url 'admin_bin_list' %}" class="btn btn-success">Abrir</a>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-panel text-center">
+                <h4>🎁 Marketplace</h4>
+                <p class="text-muted-light">Gestiona recompensas y canjes</p>
+                <a href="{% url 'admin_marketplace' %}" class="btn btn-success">Abrir</a>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-panel text-center">
+                <h4>♻️ Reciclajes</h4>
+                <p class="text-muted-light">Estadísticas y actividad</p>
+                <a href="{% url 'admin_recycling' %}" class="btn btn-success">Abrir</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAPA -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mb-1">📍 Mapa de Canecas</h4>
+                        <p class="text-muted-light mb-0">Ubicación de contenedores inteligentes</p>
+                    </div>
+                    <div id="bins-map-status"></div>
+                </div>
+                <div id="binsMap" style="height:450px;border-radius:20px;"></div>
+            </div>
+        </div>
 </div>
 
+    <div id="dashboard-data"
+         data-etiquetas="{{ etiquetas_semana|join:'|' }}"
+         data-valores="{{ valores_semana|join:'|' }}"
+         style="display:none;">
+    </div>
+{% endblock %}
+
+{% block scripts %}
 <script>
+
+    // =========================
+    // GRÁFICA DE RECICLAJES
+    // =========================
+
+    const dataElement = document.getElementById('dashboard-data');
+
+    const etiquetas = dataElement.dataset.etiquetas
+        ? dataElement.dataset.etiquetas.split('|')
+        : [];
+
+    const valores = dataElement.dataset.valores
+        ? dataElement.dataset.valores.split('|').map(Number)
+        : [];
+
     const ctx = document.getElementById('recyclingChart');
+
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [{% for etiqueta in etiquetas_semana %}"{{ etiqueta }}",{% endfor %}],
+            labels: etiquetas,
             datasets: [{
-                label: 'Reciclajes',    
-                data: [{% for valor in valores_semana %}{{ valor }},{% endfor %}],
+                label: 'Reciclajes',
+                data: valores,
                 borderColor: '#6CFF8F',
                 backgroundColor: 'rgba(108,255,143,.15)',
-                tension: .4,
-                fill: true
+                fill: true,
+                tension: .4
             }]
         },
         options: {
-            plugins: { legend: { labels: { color: 'white' } } },
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
             scales: {
-                x: { ticks: { color: 'white' } },
-                y: { ticks: { color: 'white' } }
+                x: {
+                    ticks: {
+                        color: 'white'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: 'white'
+                    }
+                }
             }
         }
     });
+
+
+    // =========================
+    // MAPA DE CANECAS
+    // =========================
+
+    const binsMapStatus = document.getElementById('bins-map-status');
+
+    const binsMap = L.map('binsMap').setView(
+        [4.5709, -74.2973],
+        6
+    );
+
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            maxZoom: 19
+        }
+    ).addTo(binsMap);
+
+
+    // =========================
+    // ICONOS PERSONALIZADOS
+    // =========================
+
+    function getBinIcon(bin) {
+
+        const nombre = (bin.nombre || '').toLowerCase();
+
+        let image = "{% static 'img/bins/green_bin.png' %}";
+
+        if (nombre.includes('verde')) {
+
+            image = "{% static 'img/bins/green_bin.png' %}";
+
+        } else if (nombre.includes('blanca')) {
+
+            image = "{% static 'img/bins/white_bin.png' %}";
+
+        } else if (
+            nombre.includes('gris') ||
+            nombre.includes('negra')
+        ) {
+
+            image = "{% static 'img/bins/gray_bin.png' %}";
+
+        } else if (nombre.includes('azul')) {
+
+            image = "{% static 'img/bins/blue_bin.png' %}";
+        }
+
+        return L.icon({
+            iconUrl: image,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -35]
+        });
+    }
+
+
+    // =========================
+    // CARGAR CANECAS
+    // =========================
+
+    fetch('/admin-panel/bins/map-data/')
+        .then(response => response.json())
+        .then(bins => {
+
+            const markers = [];
+
+            bins.forEach(bin => {
+
+                if (bin.latitude && bin.longitude) {
+
+                    const marker = L.marker(
+                        [bin.latitude, bin.longitude],
+                        {
+                            icon: getBinIcon(bin)
+                        }
+                    ).addTo(binsMap);
+
+                    marker.bindPopup(`
+                        <div style="min-width:220px;">
+                            <h6 style="margin-bottom:10px;">
+                                ${bin.nombre}
+                            </h6>
+
+                            <p style="margin-bottom:5px;">
+                                <strong>Estado:</strong>
+                                ${bin.is_active ? '🟢 Activa' : '🔴 Inactiva'}
+                            </p>
+
+                            <p style="margin-bottom:10px;">
+                                <strong>Nivel de llenado:</strong>
+                                ${bin.fill_level}%
+                            </p>
+
+                            <div style="
+                                width:100%;
+                                height:10px;
+                                background:#e9ecef;
+                                border-radius:20px;
+                                overflow:hidden;
+                            ">
+                                <div style="
+                                    width:${bin.fill_level}%;
+                                    height:100%;
+                                    background:#22c55e;
+                                "></div>
+                            </div>
+                        </div>
+                    `);
+
+                    markers.push(marker);
+                }
+            });
+
+            if (markers.length) {
+
+                const group = new L.featureGroup(markers);
+
+                binsMap.fitBounds(
+                    group.getBounds().pad(0.2)
+                );
+
+                binsMapStatus.innerHTML = `
+                    <span class="badge bg-success">
+                        ${markers.length} canecas registradas
+                    </span>
+                `;
+            }
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            binsMapStatus.innerHTML = `
+                <span class="badge bg-danger">
+                    Error cargando mapa
+                </span>
+            `;
+        });
+
 </script>
-</body>
-</html>
+{% endblock %}

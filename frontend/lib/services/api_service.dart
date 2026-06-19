@@ -45,21 +45,25 @@ class ApiService {
     return headers;
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<dynamic> login(String username, String password) async {
     try {
       final response = await http.post(
         Uri.parse(ApiConstants.login),
-        headers: await _headers(),   // ← USA LAS CABECERAS CORRECTAS
+        headers: await _headers(),
         body: jsonEncode({'username': username, 'password': password}),
       );
+      print('Login response status: ${response.statusCode}');
+      print('Login response body: ${response.body}');
+      
+      final body = response.body.isNotEmpty ? jsonDecode(response.body) : null;
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await setToken(data['access']);
+        await setToken(body['access']);
         return true;
       }
-      return false;
+      return body ?? {'detail': 'Error de autenticación'};
     } catch (e) {
-      return false;
+      print('Login error: $e');
+      return {'detail': 'Error de red. Revisa tu conexión.'};
     }
   }
 
@@ -97,6 +101,21 @@ class ApiService {
         body: jsonEncode(body),
       );
       return jsonDecode(response.body);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // JSON PATCH (o PATCH con body JSON)
+  Future<Map<String, dynamic>?> patchJson(String url, Map<String, dynamic> body) async {
+    try {
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: await _headers(),
+        body: jsonEncode(body),
+      );
+      if (response.body.isNotEmpty) return jsonDecode(response.body);
+      return {};
     } catch (e) {
       return null;
     }

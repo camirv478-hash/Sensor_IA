@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
@@ -30,10 +30,10 @@ class TFLiteService {
     try {
       _interpreter = await Interpreter.fromAsset('assets/models/waste_model.tflite');
       _isLoaded = true;
-      print('✅ Modelo TFLite cargado correctamente');
+      debugPrint('✅ Modelo TFLite cargado correctamente');
       return true;
     } catch (e) {
-      print('❌ Error cargando modelo TFLite: $e');
+      debugPrint('❌ Error cargando modelo TFLite: $e');
       return false;
     }
   }
@@ -51,36 +51,57 @@ class TFLiteService {
       // Decodificar con el paquete 'image'
       final decodedImage = img.decodeImage(imageBytes);
       if (decodedImage == null) {
-        print('❌ No se pudo decodificar la imagen');
+        debugPrint('❌ No se pudo decodificar la imagen');
         return _classifySimulated(image.path);
       }
 
-      // Redimensionar a 224x224 (lo que espera MobileNetV2)
-      final resized = img.copyResize(decodedImage, width: 224, height: 224);
+      // Preprocesado mejorado:
+      // 1) Center-crop a cuadrado, 2) redimensionar con interpolación suave
+      final int width = decodedImage.width;
+      final int height = decodedImage.height;
+      final int minDim = width < height ? width : height;
+      final int offsetX = ((width - minDim) / 2).round();
+      final int offsetY = ((height - minDim) / 2).round();
+      final cropped = img.copyCrop(
+        decodedImage,
+        x: offsetX,
+        y: offsetY,
+        width: minDim,
+        height: minDim,
+      );
 
-      // Convertir a array de floats normalizado [0, 1]
-      final input = Float32List(1 * 224 * 224 * 3);
-      int pixelIndex = 0;
+      // Redimensionar a 224x224 (lo que espera MobileNetV2)
+      final resized = img.copyResize(cropped, width: 224, height: 224, interpolation: img.Interpolation.cubic);
+
+      // Convertir a tensor de entrada 4D [1, 224, 224, 3]
+      final inputTensor = List.generate(
+        1,
+        (_) => List.generate(
+          224,
+          (_) => List.generate(
+            224,
+            (_) => List<double>.filled(3, 0.0),
+          ),
+        ),
+      );
+
       for (int y = 0; y < 224; y++) {
         for (int x = 0; x < 224; x++) {
           final pixel = resized.getPixel(x, y);
-          input[pixelIndex++] = pixel.r / 255.0; // Red
-          input[pixelIndex++] = pixel.g / 255.0; // Green
-          input[pixelIndex++] = pixel.b / 255.0; // Blue
+          inputTensor[0][y][x][0] = pixel.r / 255.0;
+          inputTensor[0][y][x][1] = pixel.g / 255.0;
+          inputTensor[0][y][x][2] = pixel.b / 255.0;
         }
       }
 
-      // Crear tensor de entrada [1, 224, 224, 3]
-      final inputTensor = input.reshape([1, 224, 224, 3]);
-
       // Tensor de salida [1, 6]
-      final outputTensor = Float32List(1 * 6).reshape([1, 6]);
+      final outputTensor = List.generate(1, (_) => List<double>.filled(6, 0.0));
 
       // Ejecutar inferencia
       _interpreter!.run(inputTensor, outputTensor);
 
       // Obtener la clase con mayor probabilidad
-      final predictions = outputTensor[0] as List<double>;
+      final predictions = outputTensor[0];
       double maxConf = 0;
       int maxIndex = 0;
       for (int i = 0; i < predictions.length; i++) {
@@ -93,7 +114,7 @@ class TFLiteService {
       final categoria = _categorias[maxIndex];
       final info = _infoCategorias[categoria]!;
 
-      print('🧠 IA clasificó: ${info['display']} (${(maxConf * 100).toStringAsFixed(1)}%)');
+      debugPrint('🧠 IA clasificó: ${info['display']} (${(maxConf * 100).toStringAsFixed(1)}%)');
 
       return {
         'categoria': categoria,
@@ -104,7 +125,7 @@ class TFLiteService {
       };
 
     } catch (e) {
-      print('❌ Error en clasificación: $e');
+      debugPrint('❌ Error en clasificación: $e');
       return _classifySimulated(image.path);
     }
   }
@@ -115,7 +136,7 @@ class TFLiteService {
     final categoria = _categorias[random];
     final info = _infoCategorias[categoria]!;
     
-    print('⚠️ Usando clasificación simulada');
+debugPrint('⚠️ Usando clasificación simulada');
     
     return {
       'categoria': categoria,

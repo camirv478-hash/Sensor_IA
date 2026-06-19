@@ -169,13 +169,19 @@ Información del usuario:
 Pregunta del usuario:
 {mensaje}
 
-Instrucciones:
-- Responde en español.
-- Usa máximo 3 oraciones.
-- Sé amigable y útil.
-- Usa emojis ecológicos.
-- Si preguntan sobre reciclaje, explica claramente.
-- Si preguntan por puntos o nivel, usa la información dada.
+Instrucciones de formato CRÍTICAS:
+1. Responde en español de forma amigable, útil y usando emojis ecológicos.
+2. Usa máximo 3 oraciones para tu explicación general.
+3. SIEMPRE debes incluir una última línea independiente al final de tu respuesta que indique el color de caneca correspondiente para el residuo mencionado en la pregunta.
+4. El formato de la última línea debe ser estrictamente: "CANECA: COLOR" (en mayúsculas). 
+   - Usa BLANCA si son residuos aprovechables limpios y secos (plástico, vidrio, cartón, papel, metales).
+   - Usa VERDE si son residuos orgánicos aprovechables (restos de comida, desechos agrícolas).
+   - Usa NEGRA o GRIS si son residuos no aprovechables o especiales.
+   - Usa AZUL si son plásticos de un solo uso o envases clásicos.
+
+Ejemplo de salida esperada:
+¡Claro que sí! Las botellas de plástico deben estar limpias y secas antes de clasificarlas. Esto ayuda a que el proceso de reciclaje sea mucho más eficiente. 🌱
+CANECA: BLANCA
 """
 
             max_retries = 2
@@ -196,7 +202,7 @@ Instrucciones:
                     if response.text:
                         return response.text.strip()
 
-                    return "♻️ No pude generar una respuesta en este momento."
+                    return "♻️ No pude generar una respuesta en este momento.\nCANECA: GRIS"
 
                 except Exception as e:
 
@@ -205,7 +211,6 @@ Instrucciones:
                     print(str(e))
                     print("==================================\n")
 
-                    # Error de límite de solicitudes
                     if '429' in str(e) and intento < max_retries - 1:
 
                         print(
@@ -220,7 +225,7 @@ Instrucciones:
                         break
 
         # ==========================================================
-        # FALLBACK: TIPS ECOLÓGICOS
+        # FALLBACK: TIPS ECOLÓGICOS (Con Caneca Inyectada por Defecto)
         # ==============================================================
 
         tips = TipReciclaje.objects.filter(activo=True)
@@ -233,6 +238,7 @@ Instrucciones:
 💡 {tip.titulo}
 
 {tip.contenido}
+CANECA: GRIS
 """
 
         # ==========================================================
@@ -240,10 +246,10 @@ Instrucciones:
         # ==============================================================
 
         return random.choice([
-            "🌍 ¡Cada acción cuenta para salvar el planeta!",
-            "♻️ Reciclar hoy es cuidar el mañana.",
-            "💚 Reduce, reutiliza y recicla.",
-            "🌱 Ayuda al planeta separando correctamente tus residuos.",
+            "🌍 ¡Cada acción cuenta para salvar el planeta!\nCANECA: GRIS",
+            "♻️ Reciclar hoy es cuidar el mañana.\nCANECA: BLANCA",
+            "💚 Reduce, reutiliza y recicla.\nCANECA: GRIS",
+            "🌱 Ayuda al planeta separando correctamente tus residuos.\nCANECA: VERDE",
         ])
 
 
@@ -278,12 +284,5 @@ class TipRandomView(APIView):
         if tips.exists():
 
             tip = random.choice(tips)
-
-            return Response(
-                TipReciclajeSerializer(tip).data
-            )
-
-        return Response(
-            {"mensaje": "No hay tips disponibles"},
-            status=404
-        )
+            return Response(TipReciclajeSerializer(tip).data)
+        return Response({"mensaje": "No hay tips disponibles"}, status=status.HTTP_404_NOT_FOUND)

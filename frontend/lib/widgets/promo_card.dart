@@ -107,7 +107,9 @@ class PromoCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Container(
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/scan'),
+                    child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
@@ -140,6 +142,7 @@ class PromoCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
                   ),
                 ],
               ),

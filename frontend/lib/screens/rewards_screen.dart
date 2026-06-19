@@ -20,20 +20,24 @@ class _RewardsScreenState extends State<RewardsScreen>
   late Animation<double> floatAnimation;
   late Animation<double> glowAnimation;
 
-  final Random random = Random();
   final ApiService _api = ApiService();
 
   List<dynamic>? _logros;
   List<dynamic>? _recompensas;
-  Map<String, dynamic>? _stats;
   bool _isLoadingLogros = true;
   bool _isLoadingRecompensas = true;
+
+  // Guardamos las configuraciones fijas de las partículas para evitar saltos locos en el build
+  final List<Map<String, double>> _particlesConfig = List.generate(12, (_) => {
+    'relativeX': Random().nextDouble(),
+    'relativeY': Random().nextDouble(),
+    'size': Random().nextDouble() * 22 + 10,
+  });
 
   @override
   void initState() {
     super.initState();
 
-    // Animaciones
     floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -58,7 +62,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     await auth.loadProfile();
     await auth.loadStats();
 
-    // Cargar logros
     try {
       final logros = await _api.getList(ApiConstants.myAchievements);
       if (mounted) setState(() { _logros = logros; _isLoadingLogros = false; });
@@ -66,7 +69,6 @@ class _RewardsScreenState extends State<RewardsScreen>
       if (mounted) setState(() => _isLoadingLogros = false);
     }
 
-    // Cargar recompensas destacadas
     try {
       final recompensas = await _api.getList('${ApiConstants.rewards}featured/');
       if (mounted) setState(() { _recompensas = recompensas; _isLoadingRecompensas = false; });
@@ -86,22 +88,38 @@ class _RewardsScreenState extends State<RewardsScreen>
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final profile = auth.profile;
-    final stats = auth.stats;
     final puntos = profile?['puntos'] ?? 0;
     final nivel = profile?['nivel'] ?? 1;
     final nivelXP = nivel * 100;
     final progresoNivel = nivelXP > 0 ? (puntos / nivelXP).clamp(0.0, 1.0) : 0.0;
+    
+    // Dimensiones dinámicas del dispositivo
+    final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Stack(
         children: [
+          // Fondo
           Positioned.fill(
             child: Image.asset("assets/backgrounds/rewards_bg.png", fit: BoxFit.cover),
           ),
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.55)),
           ),
-          ...List.generate(12, (index) => floatingParticle()),
+          
+          // Partículas estables usando la configuración fija inicializada
+          ..._particlesConfig.map((config) => Positioned(
+                left: config['relativeX']! * screenSize.width,
+                top: config['relativeY']! * screenSize.height,
+                child: Opacity(
+                  opacity: 0.25,
+                  child: Image.asset(
+                    "assets/particles/floating_leaf.png",
+                    width: config['size'],
+                  ),
+                ),
+              )),
+
           SafeArea(
             child: Column(
               children: [
@@ -147,7 +165,7 @@ class _RewardsScreenState extends State<RewardsScreen>
                             style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14)),
                         const SizedBox(height: 24),
 
-                        // Hero card (nivel actual)
+                        // Hero card con animaciones desacopladas eficientemente
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
@@ -176,32 +194,38 @@ class _RewardsScreenState extends State<RewardsScreen>
                                 ),
                               ),
                               const SizedBox(width: 10),
+                              
+                              // El AnimatedBuilder ahora maneja tanto el float como el glow sin romper el resto de la UI
                               AnimatedBuilder(
-                                animation: floatAnimation,
+                                animation: Listenable.merge([floatAnimation, glowAnimation]),
                                 builder: (_, child) {
                                   return Transform.translate(
                                     offset: Offset(0, floatAnimation.value),
                                     child: Container(
-                                      width: 170, height: 220,
+                                      width: 150, 
+                                      height: 200,
                                       decoration: BoxDecoration(
+                                        shape: BoxShape.circle, // Evita sombras cuadradas raras sobre assets transparentes
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF62FFB0).withOpacity(0.5),
+                                            color: const Color(0xFF62FFB0).withOpacity(0.35),
                                             blurRadius: glowAnimation.value,
+                                            spreadRadius: 2,
                                           ),
                                         ],
                                       ),
-                                      child: Image.asset("assets/mascots/ecobot_level3.png", fit: BoxFit.contain),
+                                      child: child,
                                     ),
                                   );
                                 },
+                                child: Image.asset("assets/mascots/ecobot_level3.png", fit: BoxFit.contain),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 28),
 
-                        // Logros (badges)
+                        // Logros
                         sectionTitle("Mis logros", "Ver todos"),
                         const SizedBox(height: 18),
                         SizedBox(
@@ -212,15 +236,17 @@ class _RewardsScreenState extends State<RewardsScreen>
                                   ? Center(
                                       child: Text("Aún no tienes logros. ¡Sigue reciclando!",
                                           style: GoogleFonts.poppins(color: Colors.white60)))
-                                  : ListView(
+                                  : ListView.builder(
                                       scrollDirection: Axis.horizontal,
-                                      children: _logros!.map((l) {
+                                      itemCount: _logros!.length,
+                                      itemBuilder: (context, index) {
+                                        final l = _logros![index];
                                         return badgeCard(
                                           l['logro_icono'] ?? 'assets/badges/badge_first.png',
                                           l['logro_nombre'] ?? 'Logro',
                                           l['logro_categoria'] ?? '',
                                         );
-                                      }).toList(),
+                                      },
                                     ),
                         ),
                         const SizedBox(height: 28),
@@ -236,27 +262,32 @@ class _RewardsScreenState extends State<RewardsScreen>
                                 ? Center(
                                     child: Text("No hay recompensas disponibles",
                                         style: GoogleFonts.poppins(color: Colors.white60)))
-                                : GridView.count(
-                                    crossAxisCount: 2,
+                                : GridView.builder(
                                     shrinkWrap: true,
                                     physics: const NeverScrollableScrollPhysics(),
-                                    crossAxisSpacing: 14,
-                                    mainAxisSpacing: 14,
-                                    childAspectRatio: 0.78,
-                                    children: _recompensas!.map((r) {
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 14,
+                                      mainAxisSpacing: 14,
+                                      childAspectRatio: 0.75,
+                                    ),
+                                    itemCount: _recompensas!.length,
+                                    itemBuilder: (context, index) {
+                                      final r = _recompensas![index];
                                       return rewardCard(
                                         r['imagen'] ?? 'assets/rewards/reward_plant.png',
                                         r['nombre'] ?? 'Recompensa',
                                         '${r['costo_puntos'] ?? 0}',
                                       );
-                                    }).toList(),
+                                    },
                                   ),
                         const SizedBox(height: 40),
                       ],
                     ),
                   ),
                 ),
-                // Bottom nav
+                
+                // Bottom Navigation Bar
                 Container(
                   height: 90,
                   decoration: BoxDecoration(
@@ -294,7 +325,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   }
 
   // ============================================================
-  // Widgets helpers (los mismos que ya tenías, sin cambios)
+  // Widgets helpers optimizados
   // ============================================================
 
   BoxDecoration premiumCard() {
@@ -310,7 +341,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+        Text(title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         Text(action, style: GoogleFonts.poppins(color: const Color(0xFF62FFB0), fontWeight: FontWeight.bold)),
       ],
     );
@@ -320,7 +351,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+        Text(title, style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         GestureDetector(
           onTap: onTap,
           child: Text(action, style: GoogleFonts.poppins(color: const Color(0xFF62FFB0), fontWeight: FontWeight.bold)),
@@ -337,12 +368,12 @@ class _RewardsScreenState extends State<RewardsScreen>
       decoration: premiumCard(),
       child: Column(
         children: [
-          Expanded(child: Image.asset(image)),
+          Expanded(child: _buildImage(image)),
           const SizedBox(height: 10),
-          Text(title, textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 6),
-          Text(subtitle, textAlign: TextAlign.center,
+          Text(subtitle, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11)),
         ],
       ),
@@ -351,17 +382,17 @@ class _RewardsScreenState extends State<RewardsScreen>
 
   Widget rewardCard(String image, String title, String price) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: premiumCard(),
       child: Column(
         children: [
-          Expanded(child: Image.asset(image)),
-          const SizedBox(height: 12),
-          Text(title, textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
+          Expanded(child: _buildImage(image)),
+          const SizedBox(height: 8),
+          Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: const Color(0xFF62FFB0)),
@@ -369,15 +400,30 @@ class _RewardsScreenState extends State<RewardsScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset("assets/icons/leaf_icon.png", width: 18),
-                const SizedBox(width: 8),
+                Image.asset("assets/icons/leaf_icon.png", width: 16),
+                const SizedBox(width: 6),
                 Text(price,
-                    style: GoogleFonts.poppins(color: const Color(0xFF62FFB0), fontWeight: FontWeight.bold)),
+                    style: GoogleFonts.poppins(color: const Color(0xFF62FFB0), fontWeight: FontWeight.bold, fontSize: 13)),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildImage(String image) {
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      return Image.network(
+        image,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => Image.asset('assets/rewards/eco_bag.png'),
+      );
+    }
+    return Image.asset(
+      image,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => Image.asset('assets/rewards/eco_bag.png'),
     );
   }
 
@@ -396,13 +442,13 @@ class _RewardsScreenState extends State<RewardsScreen>
 
   Widget glassCircleButton(IconData icon) {
     return Container(
-      width: 55, height: 55,
+      width: 50, height: 50,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.black.withOpacity(0.4),
         border: Border.all(color: const Color(0xFF62FFB0).withOpacity(0.3)),
       ),
-      child: Icon(icon, color: Colors.white),
+      child: Icon(icon, color: Colors.white, size: 20),
     );
   }
 
@@ -411,21 +457,9 @@ class _RewardsScreenState extends State<RewardsScreen>
       borderRadius: BorderRadius.circular(20),
       child: LinearProgressIndicator(
         value: value,
-        minHeight: 14,
+        minHeight: 12,
         backgroundColor: Colors.white10,
         valueColor: const AlwaysStoppedAnimation(Color(0xFF62FFB0)),
-      ),
-    );
-  }
-
-  Widget floatingParticle() {
-    return Positioned(
-      left: random.nextDouble() * 400,
-      top: random.nextDouble() * 900,
-      child: Opacity(
-        opacity: 0.25,
-        child: Image.asset("assets/particles/floating_leaf.png",
-            width: random.nextDouble() * 22 + 10),
       ),
     );
   }

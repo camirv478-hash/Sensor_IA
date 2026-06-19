@@ -10,20 +10,27 @@ class HeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final nombre = auth.profile?['first_name'] ?? 'EcoGuardián';
+    
+    // Obtención segura de las notificaciones sin duplicación de lecturas de estado
+    final int unreadCount = auth.profile?['unread_notifications'] ?? auth.stats?['unread_notifications'] ?? 0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            Container(
-              width: 48, height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1A2E1F),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF2D4A35)),
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/settings'),
+              child: Container(
+                width: 44, 
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A2E1F),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2D4A35)),
+                ),
+                child: const Icon(Icons.menu, color: Color(0xFF6CFF8F), size: 22),
               ),
-              child: const Icon(Icons.menu, color: Color(0xFF6CFF8F), size: 24),
             ),
             const SizedBox(width: 12),
             Column(
@@ -31,11 +38,11 @@ class HeaderSection extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text('¡Hola, $nombre! ', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const Text('👋', style: TextStyle(fontSize: 18)),
+                    Text('¡Hola, $nombre! ', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const Text('👋', style: TextStyle(fontSize: 16)),
                   ],
                 ),
-                Text('Bienvenido de nuevo', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF9E9E9E))),
+                Text('Bienvenido de nuevo', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF9E9E9E))),
               ],
             ),
           ],
@@ -43,22 +50,31 @@ class HeaderSection extends StatelessWidget {
         Stack(
           children: [
             Container(
-              width: 48, height: 48,
+              width: 44, 
+              height: 44,
               decoration: BoxDecoration(
                 color: const Color(0xFF1A2E1F),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFF2D4A35)),
               ),
-              child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
+              child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
             ),
-            Positioned(
-              right: 8, top: 8,
-              child: Container(
-                width: 18, height: 18,
-                decoration: const BoxDecoration(color: Color(0xFF00C853), shape: BoxShape.circle),
-                child: const Center(child: Text('3', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black))),
+            if (unreadCount > 0)
+              Positioned(
+                right: 4, 
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(color: Color(0xFF00C853), shape: BoxShape.circle),
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Center(
+                    child: Text(
+                      unreadCount > 9 ? '+9' : '$unreadCount', 
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black),
+                    ),
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ],

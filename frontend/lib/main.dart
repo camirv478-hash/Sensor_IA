@@ -15,6 +15,8 @@ import 'screens/chatbot_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/result_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/marketplace_screen.dart';
 import 'screens/admin/create_bin_screen.dart';
 import 'screens/admin/scan_qr_screen.dart';
 import 'screens/admin/update_bin_status.dart';
@@ -32,9 +34,7 @@ void main() async {
   
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
       child: const SensorIAApp(),
     ),
   );
@@ -70,6 +70,8 @@ class SensorIAApp extends StatelessWidget {
         '/result': (context) => const ResultScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/celebration': (context) => const RecyclingCelebrationScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/marketplace': (context) => const MarketplaceScreen(),
         '/edit-profile': (context) => const EditProfileScreen(),
         
         // Admin routes protegidas
