@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  // ==================== REGISTRO ====================
+  // ==================== REGISTRO CORREGIDO ====================
   Future<void> _register() async {
     final name = _nameController.text.trim();
     final username = _usernameController.text.trim();
@@ -81,7 +81,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text.trim();
     final confirm = _confirmController.text.trim();
 
-    // Validaciones
+    // Validaciones Locales
     if (name.isEmpty || username.isEmpty || email.isEmpty || password.isEmpty || confirm.isEmpty) {
       _showSnackBar('Completa todos los campos');
       return;
@@ -109,54 +109,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await _api.post(
-      ApiConstants.register,
-      {
-        'username': username,
-        'email': email,
-        'password': password,
-        'password2': confirm,
-        'first_name': name.split(' ').first,
-        'last_name': name.split(' ').length > 1 ? name.split(' ').sublist(1).join(' ') : '',
-      },
-    );
+    print('Boton Registrar presionado. Preparando mapa de datos...');
+    final Map<String, dynamic> userData = {
+      'username': username,
+      'email': email,
+      'password': password,
+      'password2': confirm,
+      'first_name': name.split(' ').first,
+      'last_name': name.split(' ').length > 1 ? name.split(' ').sublist(1).join(' ') : '',
+    };
+
+    // 🚀 CAMBIO CLAVE: Ahora llama directamente al método especializado con logs integrados
+    final result = await _api.registerUser(userData);
 
     setState(() => _isLoading = false);
 
-    // ✅ NUEVA CONDICIÓN DE ÉXITO
-    // Si la respuesta NO contiene un campo de error, asumimos éxito.
-    final hasError = result != null && (
-      result.containsKey('error') ||
-      result.containsKey('detail') ||
-      result.containsKey('non_field_errors')
-    );
-
-    if (!hasError && result != null) {
-      // ✅ Éxito: mostrar mensaje y redirigir a login
+    // Si el método especializado retorna "true", significa que la cuenta fue creada con éxito (200 o 201)
+    if (result == true) {
       _showSnackBar(
         '🎉 ¡Cuenta creada exitosamente! Redirigiendo al login...',
         isError: false,
       );
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacementNamed(context, '/login');
       }
     } else {
-      // ❌ Error: mostrar mensaje
+      // Si no es true, "result" contiene el mapa de errores enviado por Django o el ApiService
       String errorMsg = 'Error al crear cuenta';
-      if (result != null) {
+      if (result is Map) {
         if (result.containsKey('username')) {
-          errorMsg = result['username']?.first ?? 'Nombre de usuario no disponible';
+          errorMsg = result['username'] is List ? result['username'].first : result['username'].toString();
         } else if (result.containsKey('email')) {
-          errorMsg = result['email']?.first ?? 'Correo ya registrado';
+          errorMsg = result['email'] is List ? result['email'].first : result['email'].toString();
         } else if (result.containsKey('password')) {
-          errorMsg = result['password']?.first ?? 'Contraseña inválida';
+          errorMsg = result['password'] is List ? result['password'].first : result['password'].toString();
         } else if (result.containsKey('non_field_errors')) {
-          errorMsg = result['non_field_errors']?.first ?? 'Error en los datos';
+          errorMsg = result['non_field_errors'] is List ? result['non_field_errors'].first : result['non_field_errors'].toString();
         } else if (result.containsKey('detail')) {
-          errorMsg = result['detail']?.toString() ?? 'Error desconocido';
+          errorMsg = result['detail'].toString();
         } else if (result.containsKey('error')) {
-          errorMsg = result['error']?.toString() ?? 'Error en el servidor';
+          errorMsg = result['error'].toString();
         }
       }
       _showSnackBar(errorMsg);
@@ -206,7 +199,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 10),
-                  // Back button
                   Align(
                     alignment: Alignment.centerLeft,
                     child: GestureDetector(
@@ -256,7 +248,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           () => setState(() => _obscurePassword = !_obscurePassword),
                           _passwordController,
                         ),
-                        // MOSTRAR FORTALEZA SOLO SI HAY TEXTO
                         if (_passwordStrength.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
@@ -339,7 +330,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                         child: Text(
                           'Iniciar sesión',
-                            style: GoogleFonts.poppins(
+                          style: GoogleFonts.poppins(
                             color: const Color(0xFF6CFF8F),
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -395,7 +386,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         controller: controller,
         obscureText: obscure,
         style: const TextStyle(color: Colors.white),
-        // ❌ onChanged eliminado, el listener lo maneja
         decoration: InputDecoration(
           border: InputBorder.none,
           prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6CFF8F)),
