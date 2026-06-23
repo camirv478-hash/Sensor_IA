@@ -28,7 +28,7 @@ class ApiService {
     return _token;
   }
 
-  Future<Map<String, String>> _headers({bool isMultipart = false}) async {
+  Future<Map<String, String>> _headers({bool isMultipart = false, bool isForm = false}) async {
     final token = await getToken();
     
     final Map<String, String> headers = {
@@ -40,7 +40,12 @@ class ApiService {
       return headers;
     }
 
-    headers['Content-Type'] = 'application/json; charset=utf-8';
+    if (isForm) {
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    } else {
+      headers['Content-Type'] = 'application/json; charset=utf-8';
+    }
+
     if (token != null) headers['Authorization'] = 'Bearer $token';
     return headers;
   }
@@ -72,12 +77,10 @@ class ApiService {
     }
   }
 
-  // NUEVO MÉTODO: Para crear/registrar una cuenta nueva
+  // Método para crear/registrar una cuenta nueva
   Future<dynamic> registerUser(Map<String, dynamic> userData) async {
     try {
       print('--- 📝 INTENTANDO CREAR CUENTA ---');
-      
-      // 🚀 Usamos directamente la constante del endpoint completo corregido
       final String urlRegistro = ApiConstants.register; 
       
       print('URL Destino Registro: $urlRegistro');
@@ -105,7 +108,6 @@ class ApiService {
     }
   }
 
-  // 🚀 MÉTODOS AGREGADOS QUE FALTABAN PARA EL AUTH_PROVIDER:
   Future<void> logout() async {
     _token = null;
     await _storage.delete(key: 'jwt_token');
@@ -120,7 +122,7 @@ class ApiService {
   // MÉTODOS HTTP GENERALES
   // ============================================
 
-  Future<Map<String, dynamic>?> get(String url) async {
+  Future<dynamic> get(String url) async {
     try {
       final response = await http.get(Uri.parse(url), headers: await _headers());
       if (response.statusCode == 200) {
@@ -128,24 +130,51 @@ class ApiService {
       }
       return null;
     } catch (e) {
+      print('🚨 Error en GET ($url): $e');
       return null;
     }
   }
 
-  Future<Map<String, dynamic>?> post(String url, Map<String, dynamic> body) async {
+  Future<dynamic> post(String url, Map<String, dynamic> body) async {
     try {
       final response = await http.post(
         Uri.parse(url),
         headers: await _headers(),
         body: jsonEncode(body),
       );
-      return jsonDecode(response.body);
+      if (response.body.isNotEmpty) {
+        return jsonDecode(response.body);
+      }
+      return {'success': response.statusCode >= 200 && response.statusCode < 300};
     } catch (e) {
+      print('🚨 Error en POST ($url): $e');
       return null;
     }
   }
 
-  Future<Map<String, dynamic>?> patchJson(String url, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>?> postForm(String url, Map<String, String> body) async {
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: await _headers(isForm: true),
+        body: body,
+      );
+      
+      print('Form response status: ${response.statusCode}');
+      print('Form response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (response.body.isNotEmpty) return jsonDecode(response.body);
+        return {'success': true};
+      }
+      return null;
+    } catch (e) {
+      print('🚨 Error en postForm: $e');
+      return null;
+    }
+  }
+
+  Future<dynamic> patchJson(String url, Map<String, dynamic> body) async {
     try {
       final response = await http.patch(
         Uri.parse(url),
@@ -155,6 +184,7 @@ class ApiService {
       if (response.body.isNotEmpty) return jsonDecode(response.body);
       return {};
     } catch (e) {
+      print('🚨 Error en PATCH ($url): $e');
       return null;
     }
   }
@@ -164,8 +194,7 @@ class ApiService {
       var request = http.MultipartRequest('POST', Uri.parse(url));
       final headers = await _headers(isMultipart: true);
       
-      final tokenEnviado = headers['Authorization'];
-      print('Token enviado al escanear: $tokenEnviado');
+      print('Token enviado al escanear: ${headers['Authorization']}');
       
       request.headers.addAll(headers);
       request.fields.addAll(fields);
@@ -177,6 +206,7 @@ class ApiService {
       final responseBody = await response.stream.bytesToString();
       return jsonDecode(responseBody);
     } catch (e) {
+      print('🚨 Error en postMultipart: $e');
       return null;
     }
   }
@@ -193,6 +223,7 @@ class ApiService {
       final responseBody = await response.stream.bytesToString();
       return jsonDecode(responseBody);
     } catch (e) {
+      print('🚨 Error en patchMultipart: $e');
       return null;
     }
   }
@@ -205,6 +236,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
+      print('🚨 Error en getList ($url): $e');
       return null;
     }
   }

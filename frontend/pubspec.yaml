@@ -36,6 +36,7 @@ dependencies:
   firebase_auth: ^6.5.1
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^8.0.0
+  flutter_launcher_icons: "^0.13.1"
 
 dev_dependencies:
   flutter_test:
@@ -74,3 +75,11 @@ flutter:
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
+
+
+# ======= ESTO VA AL PURO FINAL DEL ARCHIVO, SIN ESPACIOS AL INICIO =======
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.jpeg"
+  min_sdk_android: 21

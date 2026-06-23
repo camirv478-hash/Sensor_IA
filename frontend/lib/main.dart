@@ -88,7 +88,14 @@ class SensorIAApp extends StatelessWidget {
         '/admin/update-bin': (context) {
           final auth = Provider.of<AuthProvider>(context, listen: false);
           if (!auth.esAdmin) return const LoginScreen();
-          return const UpdateBinStatusScreen();
+
+          // Extraemos los argumentos dinámicos que se pasan al navegar
+          final args = ModalRoute.of(context)?.settings.arguments;
+          
+          // Si por alguna razón no se envían datos, evitamos que rompa mandando un mapa vacío
+          final binData = args is Map<String, dynamic> ? args : <String, dynamic>{};
+
+          return UpdateBinStatusScreen(binData: binData);
         },
       },
     );

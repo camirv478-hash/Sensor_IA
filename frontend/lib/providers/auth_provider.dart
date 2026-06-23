@@ -13,8 +13,11 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _isLoggedIn;
   String? get errorMessage => _errorMessage;
-  Map<String, dynamic>? get profile => _profile;
+  
   Map<String, dynamic>? get stats => _stats;
+
+  // Getter seguro para exponer el perfil mapeado correctamente
+  Map<String, dynamic>? get profile => _profile;
 
   Future<bool> login(String username, String password) async {
     _isLoading = true;
@@ -29,7 +32,6 @@ class AuthProvider extends ChangeNotifier {
       if (result == true) {
         success = true;
         _isLoggedIn = true;
-        // Cargamos de manera interna y silenciosa antes de notificar la carga finalizada
         await loadProfile(silent: true);
         await loadStats(silent: true);
       } else if (result is Map<String, dynamic>) {
@@ -58,11 +60,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Carga el perfil del usuario de forma segura.
-  /// Si [silent] es true, no dispara [notifyListeners] (ideal para encadenar peticiones).
   Future<void> loadProfile({bool silent = false}) async {
     try {
-      _profile = await _api.get(ApiConstants.profile);
+      final data = await _api.get(ApiConstants.profile);
+      if (data is Map<String, dynamic>) {
+        _profile = data;
+      }
     } catch (e) {
       print('Error cargando perfil: $e');
       _profile = null;
@@ -71,11 +74,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// Carga las estadísticas del usuario de forma segura.
-  /// Si [silent] es true, no dispara [notifyListeners] (ideal para encadenar peticiones).
   Future<void> loadStats({bool silent = false}) async {
     try {
-      _stats = await _api.get(ApiConstants.stats);
+      final data = await _api.get(ApiConstants.stats);
+      if (data is Map<String, dynamic>) {
+        _stats = data;
+      }
     } catch (e) {
       print('Error cargando estadísticas: $e');
       _stats = null;
@@ -90,7 +94,6 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       print('Error durante logout en servidor: $e');
     } finally {
-      // Siempre limpiamos el estado local de la app pase lo que pase con la petición de red
       _isLoggedIn = false;
       _profile = null;
       _stats = null;
@@ -102,7 +105,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       _isLoggedIn = await _api.isLoggedIn;
       if (_isLoggedIn) {
-        // Ejecución concurrente limpia para ahorrar tiempo de carga inicial
         await Future.wait([
           loadProfile(silent: true),
           loadStats(silent: true),
@@ -122,7 +124,7 @@ class AuthProvider extends ChangeNotifier {
   }
   
   bool get esAdmin {
-    final rol = profile?['rol'] ?? 'user';
+    final rol = _profile?['rol'] ?? 'user';
     return rol == 'admin' || rol == 'Administrador';
   }
 }

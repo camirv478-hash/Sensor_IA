@@ -28,9 +28,10 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
       _scannedResult = barcode!.rawValue;
     });
 
-    // Registrar escaneo en backend
+    // Registrar escaneo en el backend
+    // CHORE: Ajustamos las llaves si tu backend espera nombres en español (ej. 'codigo_qr')
     await _api.post(ApiConstants.scanQR, {
-      'qr_code': _scannedResult,
+      'codigo_qr': _scannedResult, 
       'timestamp': DateTime.now().toIso8601String(),
     });
 
@@ -43,7 +44,7 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
       );
     }
 
-    // Reset después de 3 segundos
+    // Reset automático después de 3 segundos para permitir otro escaneo
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
@@ -68,13 +69,19 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Escanear QR', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Escanear QR', 
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+        ),
         actions: [
           IconButton(
-            icon: Icon(controller.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off),
+            icon: Icon(
+              controller.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
+              color: Colors.white,
+            ),
             onPressed: () => controller.toggleTorch(),
           ),
         ],
@@ -88,7 +95,7 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
                   controller: controller,
                   onDetect: _onDetect,
                 ),
-                // Overlay frame
+                // Overlay frame con estética de SensorIA
                 Center(
                   child: Container(
                     width: 260,
@@ -122,8 +129,10 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text('Coloca el QR dentro del recuadro',
-                style: GoogleFonts.poppins(color: Colors.white70)),
+            child: Text(
+              'Coloca el QR dentro del recuadro',
+              style: GoogleFonts.poppins(color: Colors.white70)
+            ),
           ),
           const SizedBox(height: 20),
         ],

@@ -4,7 +4,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:sensoria/services/api_service.dart';
 import 'package:sensoria/utils/constants.dart';
 
-
 class CreateBinScreen extends StatefulWidget {
   const CreateBinScreen({super.key});
 
@@ -90,6 +89,9 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
   }
 
   Future<void> saveBin() async {
+    // Evita problemas con el gestor de focos nativo de Android
+    FocusScope.of(context).unfocus();
+
     final name = nameController.text.trim();
     final zone = zoneController.text.trim();
 
@@ -102,42 +104,53 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
 
     if (latitude == null || longitude == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona una ubicación')),
+        const SnackBar(content: Text('Por favor, obtén la ubicación primero')),
       );
       return;
     }
 
     setState(() => _isSaving = true);
 
-    final result = await _api.post(ApiConstants.createBin, {
-      'name': name,
-      'zone': zone,
-      'type': selectedType.toLowerCase(),
-      'latitude': latitude,
-      'longitude': longitude,
-    });
+    try {
+      // Mapeo exacto simulando los inputs en inglés del formulario HTML
+      final Map<String, String> bodyData = {
+        'nombre': name,
+        'zona': zone,
+        'tipo': selectedType.toLowerCase(),
+        'latitude': latitude.toString(),
+        'longitude': longitude.toString(),
+      };
 
-    setState(() => _isSaving = false);
+      print('📤 Enviando Formulario a Django: $bodyData');
 
-    if (result != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Caneca creada correctamente ♻️'),
-          backgroundColor: Color(0xFF6CFF8F),
-        ),
-      );
-      Navigator.pop(context);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al crear la caneca')),
-      );
+      // Enviamos usando el nuevo método postForm
+      final result = await _api.postForm(ApiConstants.createBin, bodyData);
+
+      setState(() => _isSaving = false);
+
+      if (result != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Caneca creada correctamente ♻️'),
+            backgroundColor: Color(0xFF6CFF8F),
+          ),
+        );
+        Navigator.pop(context);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El backend rechazó los datos (Revisa la consola de Django)')),
+        );
+      }
+    } catch (error, stackTrace) {
+      setState(() => _isSaving = false);
+      print('🚨 ERROR DENTRO DE SAVE_BIN: $error');
+      print('📌 DETALLE DEL FALLO: $stackTrace');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final selectedBin = binTypes.firstWhere((e) => e['name'] == selectedType);
-    final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: const Color(0xFF07111A),
@@ -145,10 +158,13 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Crear Caneca', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Crear Caneca', 
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -192,7 +208,6 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
             ),
             const SizedBox(height: 25),
 
-            // Ubicación
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -204,7 +219,7 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
                   Text(
                     latitude == null
                         ? 'Sin ubicación seleccionada'
-                        : 'Lat: ${latitude!.toStringAsFixed(4)}\nLng: ${longitude!.toStringAsFixed(4)}',
+                        : 'Lat: ${latitude!.toStringAsFixed(6)}\nLng: ${longitude!.toStringAsFixed(6)}',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(color: Colors.white70),
                   ),
@@ -222,8 +237,10 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
                             child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
                           )
                         : const Icon(Icons.location_on, color: Colors.black),
-                    label: Text('Obtener ubicación',
-                        style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      'Obtener ubicación',
+                      style: GoogleFonts.poppins(color: Colors.black, fontWeight: FontWeight.bold)
+                    ),
                   ),
                 ],
               ),
@@ -241,8 +258,10 @@ class _CreateBinScreenState extends State<CreateBinScreen> {
                 onPressed: _isSaving ? null : saveBin,
                 child: _isSaving
                     ? const CircularProgressIndicator(color: Colors.black)
-                    : Text('Guardar Caneca',
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                    : Text(
+                        'Guardar Caneca',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)
+                      ),
               ),
             ),
           ],

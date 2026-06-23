@@ -1,7 +1,10 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework_simplejwt.authentication import JWTAuthentication  # 👈 Asegúrate de tener esta importación arriba si no está
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,13 +15,18 @@ from .serializers import (
 )
 
 # ============================================================
-# PERMISOS PERSONALIZADOS
+# PERMISOS PERSONALIZADOS (CORREGIDO)
 # ============================================================
 class IsAdminUser(permissions.BasePermission):
+    """Permiso estricto pero flexible para administradores de SensorIA."""
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        return getattr(request.user, 'rol', None) == 'admin' or request.user.is_superuser
+        
+        # Verificamos el rol transformándolo a minúsculas para evitar fallos de tipeo
+        user_role = str(getattr(request.user, 'rol', '')).lower()
+        
+        return user_role in ['admin', 'administrador'] or request.user.is_staff or request.user.is_superuser
 
 
 # ============================================================
@@ -40,7 +48,8 @@ class BinCreateView(generics.CreateAPIView):
     """Crear caneca vía API (solo administradores)."""
     serializer_class = BinCreateSerializer
     permission_classes = (IsAdminUser,)
-
+    authentication_classes = (JWTAuthentication,)  # ♻️ Fuerza a DRF a leer el Token JWT Bearer correctamente
+    
     def perform_create(self, serializer):
         serializer.save()
 
@@ -108,7 +117,7 @@ class BinScanView(APIView):
 
 
 # ============================================================
-# VISTAS WEB (para el panel de administración)
+# VISTAS WEB / HÍBRIDAS
 # ============================================================
 @staff_member_required
 def bin_list_web(request):
@@ -117,11 +126,18 @@ def bin_list_web(request):
     return render(request, 'admin_panel/bin_list.html', {'canecas': canecas})
 
 
-@staff_member_required
+@csrf_exempt  
 def bin_create_web(request):
-    """Formulario para crear una caneca desde el panel web."""
+    """Formulario híbrido para crear una caneca desde la web o app móvil."""
+    is_mobile = 'Dart' in request.META.get('HTTP_USER_AGENT', '')
+
+    # Si no es celular, exigimos validación de staff normal de Django
+    if not is_mobile:
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return redirect('admin_dashboard')
+
     if request.method == 'POST':
-        print("POST DATA:", request.POST)
+        print("POST DATA RECIBIDO:", request.POST)
         nombre = request.POST.get('nombre')
         tipo = request.POST.get('tipo')
         zona = request.POST.get('zona', '')
@@ -129,10 +145,12 @@ def bin_create_web(request):
         longitud = request.POST.get('longitude')
 
         if not nombre or not latitud or not longitud:
+            if is_mobile:
+                return JsonResponse({'error': 'Faltan datos obligatorios'}, status=400)
             messages.error(request, '❌ Faltan datos obligatorios (nombre, latitud, longitud).')
         else:
             try:
-                Bin.objects.create(
+                nueva_caneca = Bin.objects.create(
                     nombre=nombre,
                     zona=zona,
                     tipo=tipo,
@@ -141,14 +159,25 @@ def bin_create_web(request):
                     is_active=True,
                     fill_level=0
                 )
+                
+                if is_mobile:
+                    return JsonResponse({
+                        'success': True, 
+                        'id': nueva_caneca.id, 
+                        'nombre': nueva_caneca.nombre
+                    }, status=201)
+
                 messages.success(request, '✅ Caneca creada correctamente.')
                 return redirect('admin_bin_list')
+                
             except Exception as e:
                 print("=" * 50)
                 print("ERROR CREANDO CANECA")
                 print(repr(e))
                 print("=" * 50)
-
+                
+                if is_mobile:
+                    return JsonResponse({'error': str(e)}, status=500)
                 messages.error(request, f'❌ Error al guardar: {e}')
 
     return render(request, 'admin_panel/bin_create.html')
